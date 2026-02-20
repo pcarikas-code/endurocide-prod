@@ -22,9 +22,9 @@ export default function SEO({
   useEffect(() => {
     // Update title
     if (title === "Home") {
-      document.title = "endurocide® NZ | Antimicrobial Hospital Curtains & Infection Control";
+      document.title = "endurocide® NZ | Antimicrobial Hospital Curtains";
     } else {
-      document.title = `${title} | endurocide® New Zealand`;
+      document.title = `${title} | endurocide® NZ`;
     }
 
     // Update meta tags
