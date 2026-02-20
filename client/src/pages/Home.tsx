@@ -55,7 +55,7 @@ export default function Home() {
               
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground leading-tight flex flex-col gap-4">
                 <img src="/logo.webp" alt="endurocide® NZ Logo" className="h-12 md:h-16 w-auto self-start" />
-                <span>The Future of <span className="text-primary">Hospital Hygiene</span></span>
+                <span>endurocide® Antimicrobial Curtains - The Future of <span className="text-primary">Hospital Hygiene</span></span>
                   <TextCarousel 
                     items={[
                       "Kills bacteria on contact",

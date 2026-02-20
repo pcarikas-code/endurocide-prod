@@ -65,7 +65,7 @@ export default function ProductGuides() {
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">Product Guides & Resources</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">Product Guides, Downloads & Technical Resources</h1>
           <p className="text-lg text-muted-foreground">
             Access technical documentation, installation manuals, and care instructions to ensure optimal performance of your <strong>endurocide®</strong> products.
           </p>

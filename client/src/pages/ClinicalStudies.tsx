@@ -16,7 +16,7 @@ export default function ClinicalStudies() {
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">Clinical Validation</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">Clinical Studies & Independent Testing Reports</h1>
           <p className="text-lg text-muted-foreground">
             <strong>endurocide®</strong> curtains are backed by independent laboratory testing and peer-reviewed clinical studies demonstrating proven efficacy against hospital-acquired infections.
           </p>

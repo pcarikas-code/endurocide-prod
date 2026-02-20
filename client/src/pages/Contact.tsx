@@ -45,7 +45,7 @@ export default function Contact() {
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto text-center mb-16">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">Get in Touch</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">Contact endurocide® New Zealand</h1>
           <p className="text-lg text-muted-foreground">
             Have questions about <strong>endurocide®</strong>? Our team is here to help you find the right infection control solution.
           </p>
