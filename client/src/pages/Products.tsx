@@ -157,7 +157,7 @@ export default function Products() {
         {/* Sizes Card */}
         <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-12">
           <div className="p-6 border-b bg-muted/30">
-            <h3 className="text-2xl font-bold text-primary">Sizes</h3>
+            <h2 className="text-2xl font-bold text-primary">Curtain Sizes & Dimensions</h2>
             <p className="text-muted-foreground mt-2">Available dimensions for all curtain types.</p>
           </div>
           <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
@@ -203,7 +203,7 @@ export default function Products() {
         {/* Comparison Table */}
         <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-12">
           <div className="p-6 border-b bg-muted/30">
-            <h3 className="text-2xl font-bold text-primary">Product Comparison</h3>
+            <h2 className="text-2xl font-bold text-primary">Compare Antimicrobial Curtain Models</h2>
             <p className="text-muted-foreground mt-2">Find the right curtain for your facility's needs. View our <Link href="/guides" className="text-primary hover:underline">installation guides</Link> for more details.</p>
           </div>
           <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">

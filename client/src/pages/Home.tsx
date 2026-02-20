@@ -93,7 +93,7 @@ export default function Home() {
       <section className="py-24 bg-background">
         <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Why Choose endurocide®?</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Choose endurocide® Antimicrobial Curtains?</h2>
             <p className="text-muted-foreground text-lg">
               Our patented technology offers continuous protection against pathogens, reducing the risk of Hospital Acquired Infections (HAIs).
             </p>
@@ -153,7 +153,7 @@ export default function Home() {
             </div>
             <div className="order-1 lg:order-2 space-y-8">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                Scientifically Proven Efficacy
+                Scientifically Proven Infection Control Efficacy
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 <strong>endurocide®</strong> curtains have been independently tested against international standards. Our unique formulation creates a "trap and kill" mechanism that works instantly.
