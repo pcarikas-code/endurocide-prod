@@ -111,11 +111,31 @@ export default function About() {
         </div>
 
         {/* Architects & Specifiers */}
-        <div className="bg-muted/50 rounded-3xl p-8 md:p-12">
+        <div className="bg-muted/50 rounded-3xl p-8 md:p-12 space-y-12">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-foreground mb-4">For Architects & Specifiers</h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
               Designing the future of healthcare requires specifying products that meet the highest standards of safety and compliance. <strong>endurocide®</strong> curtains are available in various sizes and configurations, including options that are compliant with NFPA 13 standards for ceiling-fixed tracks. Partner with us to incorporate a proven, passive infection control product into your next healthcare project.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto border-t border-border/50 pt-12">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Sustainability & Responsibility</h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              We recognize that infection control must go hand-in-hand with environmental stewardship. <strong>endurocide®</strong> curtains are manufactured using 100% recyclable polypropylene, ensuring that at the end of their life cycle, they can be processed responsibly rather than adding to landfill waste. Unlike traditional PVC curtains, our polypropylene fabric is non-toxic and safe for incineration if clinical waste disposal is required.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Furthermore, by eliminating the need for laundering, we significantly reduce the water, energy, and chemical consumption associated with maintaining reusable textile curtains. A single hospital can save thousands of liters of water and reduce its carbon footprint simply by switching to our long-lasting, low-maintenance solution. We are committed to helping New Zealand healthcare providers meet their sustainability goals while maintaining the highest standards of hygiene.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto border-t border-border/50 pt-12">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Partnering with New Zealand Healthcare</h2>
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              Kenco Ltd is proud to be a trusted partner to District Health Boards (DHBs), private hospitals, and aged care facilities across New Zealand. We understand the unique challenges of our local healthcare environment—from the need for cost-effective solutions to the stringent requirements for infection prevention.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Our local team provides comprehensive support, including site assessments, installation training, and ongoing supply chain management to ensure you always have the stock you need. Whether you are retrofitting an existing ward or equipping a new facility, we work closely with your clinical and facilities teams to implement a curtain management strategy that enhances patient safety and operational efficiency.
             </p>
           </div>
         </div>
