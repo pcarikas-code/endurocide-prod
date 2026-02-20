@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SEO from "@/components/SEO";
 import { pathogenData } from "@/data/pathogenData";
+import { Link } from "wouter";
 
 export default function ClinicalStudies() {
   return (
@@ -18,7 +19,7 @@ export default function ClinicalStudies() {
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">Clinical Studies & Independent Testing Reports</h1>
           <p className="text-lg text-muted-foreground">
-            <strong>endurocide®</strong> curtains are backed by independent laboratory testing and peer-reviewed clinical studies demonstrating proven efficacy against hospital-acquired infections.
+            <strong>endurocide®</strong> curtains are backed by independent laboratory testing and peer-reviewed clinical studies demonstrating proven efficacy against hospital-acquired infections. <Link href="/products" className="text-primary hover:underline">View our product range</Link> to see available options.
           </p>
         </div>
 

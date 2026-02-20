@@ -87,7 +87,7 @@ export default function Products() {
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">endurocide® Antimicrobial Curtain Product Range</h1>
           <p className="text-lg text-muted-foreground">
-            Explore our range of infection control solutions designed for modern healthcare facilities.
+            Explore our range of infection control solutions designed for modern healthcare facilities. Need help choosing? <Link href="/contact" className="text-primary hover:underline">Contact our team</Link> for assistance.
           </p>
         </div>
 
@@ -204,7 +204,7 @@ export default function Products() {
         <div className="bg-card rounded-xl border shadow-sm overflow-hidden mb-12">
           <div className="p-6 border-b bg-muted/30">
             <h3 className="text-2xl font-bold text-primary">Product Comparison</h3>
-            <p className="text-muted-foreground mt-2">Find the right curtain for your facility's needs.</p>
+            <p className="text-muted-foreground mt-2">Find the right curtain for your facility's needs. View our <Link href="/guides" className="text-primary hover:underline">installation guides</Link> for more details.</p>
           </div>
           <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
             <Table className="min-w-[600px]">

@@ -107,7 +107,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Dual-Action Technology</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Traps and kills bacteria, fungi, and spores on the fabric surface, preventing re-transmission.
+                  Traps and kills bacteria, fungi, and spores on the fabric surface, preventing re-transmission. <Link href="/clinical-studies" className="text-primary hover:underline">View clinical studies</Link>.
                 </p>
               </CardContent>
             </Card>
@@ -119,7 +119,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Long-Lasting Protection</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Remains effective for up to 2 years, significantly reducing changeover frequency and costs.
+                  Remains effective for up to 2 years, significantly reducing changeover frequency and costs. <Link href="/guides" className="text-primary hover:underline">Download maintenance guide</Link>.
                 </p>
               </CardContent>
             </Card>
