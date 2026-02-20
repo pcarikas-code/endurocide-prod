@@ -146,7 +146,7 @@ export default function Home() {
             <div className="order-2 lg:order-1 relative">
               <div className="absolute -inset-4 bg-primary/5 rounded-3xl transform -rotate-2"></div>
               <img 
-                src="/images/microscope-barrier.jpg" 
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663210229360/fwTOCJovBQrSFSxg.jpg" 
                 alt="Microscopic view of antimicrobial barrier" 
                 className="relative rounded-2xl shadow-2xl w-full"
               />

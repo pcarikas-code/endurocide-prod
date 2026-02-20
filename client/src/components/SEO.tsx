@@ -39,10 +39,12 @@ export default function SEO({
     };
 
     Object.entries(metaTags).forEach(([name, content]) => {
+      // Try to find existing meta tag by name or property
       let element = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
       
       if (!element) {
         element = document.createElement("meta");
+        // Use 'property' for og: tags, 'name' for others
         element.setAttribute(name.startsWith("og:") ? "property" : "name", name);
         document.head.appendChild(element);
       }
@@ -58,8 +60,13 @@ export default function SEO({
       document.head.appendChild(canonical);
     }
     // Ensure canonical URL does not contain query parameters
-    const canonicalUrl = new URL(url);
-    canonical.setAttribute("href", `${canonicalUrl.origin}${canonicalUrl.pathname}`);
+    try {
+      const canonicalUrl = new URL(url);
+      canonical.setAttribute("href", `${canonicalUrl.origin}${canonicalUrl.pathname}`);
+    } catch (e) {
+      // Fallback if URL parsing fails
+      canonical.setAttribute("href", url);
+    }
 
     // Inject Structured Data (JSON-LD)
     if (structuredData) {

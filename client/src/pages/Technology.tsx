@@ -113,7 +113,7 @@ export default function Technology() {
                   </div>
 
                   <img 
-                    src="/images/microscope-barrier.jpg" 
+                    src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663210229360/fwTOCJovBQrSFSxg.jpg" 
                     alt="Microscopic action" 
                     className="w-full rounded-xl shadow-lg mb-6"
                   />
@@ -199,7 +199,7 @@ export default function Technology() {
                     </ul>
                   </div>
                   <img 
-                    src="/images/feature-eco.jpg" 
+                    src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663210229360/IafCDKGAFfIDmWtZ.jpg" 
                     alt="Eco friendly icon" 
                     className="rounded-xl shadow-lg"
                   />
