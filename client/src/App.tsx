@@ -13,6 +13,7 @@ import ProductGuides from "./pages/ProductGuides";
 import ClinicalStudies from "./pages/ClinicalStudies";
 import News from "@/pages/News";
 import Article from "@/pages/Article";
+import Monkeypox from "@/pages/Monkeypox";
 
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -30,6 +31,7 @@ function Router() {
         <Route path="/studies" component={ClinicalStudies} />
         <Route path="/news" component={News} />
       <Route path="/news/:slug" component={Article} />
+        <Route path="/monkeypox-infection-control" component={Monkeypox} />
         <Route path="/about" component={About} />
         <Route path="/contact" component={Contact} />
         <Route path="/thank-you" component={ThankYou} />
