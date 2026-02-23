@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Build the Docker image
+echo "Building Docker image..."
+docker build -t endurocide-next .
+
 # Stop and remove existing container if it exists
 echo "Stopping existing container..."
 docker stop endurocide-next || true
