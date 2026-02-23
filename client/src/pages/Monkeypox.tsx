@@ -9,7 +9,14 @@ export default function Monkeypox() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-primary/10 to-background">
-        <div className="container px-4 md:px-6">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/images/mpox-banner.png" 
+            alt="Monkeypox Infection Control Banner" 
+            className="w-full h-full object-cover opacity-20"
+          />
+        </div>
+        <div className="container relative z-10 px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
               <Badge variant="destructive" className="mb-4">
