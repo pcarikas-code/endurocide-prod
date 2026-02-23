@@ -5,7 +5,7 @@
 
 IMAGE_NAME="endurocide-web"
 CONTAINER_NAME="endurocide-container"
-PORT=${1:-3000}
+PORT=${1:-3001}
 TAG=${2:-latest}
 
 echo "🚀 Starting deployment process..."
