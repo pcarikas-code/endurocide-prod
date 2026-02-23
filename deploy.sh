@@ -5,21 +5,18 @@ echo "Stopping existing container..."
 docker stop endurocide-next || true
 docker rm endurocide-next || true
 
-# Check if port 3000 is still in use
-if lsof -i :3000 > /dev/null; then
-  echo "Port 3000 is still in use by:"
-  lsof -i :3000
-  echo "Attempting to stop conflicting container..."
-  # Find container ID using port 3000
-  CONTAINER_ID=$(docker ps -q --filter "publish=3000")
-  if [ -n "$CONTAINER_ID" ]; then
-    docker stop $CONTAINER_ID
-    docker rm $CONTAINER_ID
-    echo "Stopped conflicting container: $CONTAINER_ID"
-  else
-    echo "Could not identify conflicting container. Please check manually."
-    exit 1
-  fi
+# Check if port 3000 is still in use by ANY container
+echo "Checking for port 3000 conflicts..."
+CONFLICTING_CONTAINER=$(docker ps -q --filter "publish=3000")
+
+if [ -n "$CONFLICTING_CONTAINER" ]; then
+  echo "Found conflicting container: $CONFLICTING_CONTAINER"
+  echo "Stopping conflicting container..."
+  docker stop $CONFLICTING_CONTAINER
+  docker rm $CONFLICTING_CONTAINER
+  echo "Stopped conflicting container."
+else
+  echo "No conflicting containers found on port 3000."
 fi
 
 # Run new container
