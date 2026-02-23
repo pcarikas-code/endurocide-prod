@@ -8,21 +8,25 @@ export default function Monkeypox() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-primary/10 to-background">
+      <section className="relative w-full min-h-[600px] flex items-end pb-12 md:pb-24">
+        {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
             src="/images/mpox-banner.png" 
             alt="Monkeypox Infection Control Banner" 
-            className="w-full h-full object-cover opacity-20"
+            className="w-full h-full object-cover object-top"
           />
+          {/* Gradient Overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background"></div>
         </div>
-        <div className="container relative z-10 px-4 md:px-6">
+        
+        <div className="container relative z-10 px-4 md:px-6" style={{ marginTop: '300px' }}>
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
               <Badge variant="destructive" className="mb-4">
                 Infection Control Alert
               </Badge>
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none" style={{ textShadow: '0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(255,255,255,0.5)' }}>
                 Understanding Monkeypox Risks & <br className="hidden md:inline" />
                 <span className="text-primary">Effective Infection Control</span>
               </h1>
