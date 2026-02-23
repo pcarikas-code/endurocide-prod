@@ -11,7 +11,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-primary/5 to-background overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-10">
+        <div className="absolute inset-0 z-0 opacity-20">
           <Image
             src="/images/hero-curtain-flipped.webp"
             alt="Hospital Environment"
@@ -35,6 +35,17 @@ export default function Home() {
                   endurocide® curtains are impregnated with a patented liquid that traps and kills pathogens on contact, providing continuous protection for up to 24 months.
                 </p>
               </div>
+              
+              {/* Text Carousel moved here */}
+              <div className="py-4">
+                <TextCarousel items={[
+                  "Proven to reduce HAIs by up to 99.9%",
+                  "Trusted by leading hospitals worldwide",
+                  "Cost-effective and environmentally friendly",
+                  "Easy to install and maintain"
+                ]} className="text-lg md:text-xl font-medium text-primary/80" />
+              </div>
+
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Link href="/products">
                   <Button size="lg" className="w-full min-[400px]:w-auto">
@@ -184,19 +195,6 @@ export default function Home() {
               />
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Testimonials / Carousel */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/5">
-        <div className="container px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter mb-12">Trusted by Healthcare Professionals</h2>
-          <TextCarousel items={[
-            "Proven to reduce HAIs by up to 99.9%",
-            "Trusted by leading hospitals worldwide",
-            "Cost-effective and environmentally friendly",
-            "Easy to install and maintain"
-          ]} className="text-xl md:text-2xl font-medium text-muted-foreground" />
         </div>
       </section>
 
