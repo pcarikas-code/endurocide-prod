@@ -42,7 +42,7 @@ export default function RootLayout({
                     <Link href="/" className="flex items-center space-x-2">
                       <div className="relative h-8 w-8 md:h-10 md:w-10">
                         <Image
-                          src="/images/logo-icon.png"
+                          src="/logo.webp"
                           alt="Endurocide Logo"
                           fill
                           className="object-contain"

@@ -13,7 +13,7 @@ export default function Home() {
       <section className="relative w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-primary/5 to-background overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-10">
           <Image
-            src="/images/hero-bg.jpg"
+            src="/images/hero-curtain-flipped.webp"
             alt="Hospital Environment"
             fill
             className="object-cover"
@@ -71,7 +71,7 @@ export default function Home() {
               <div className="relative w-full max-w-[500px] aspect-video rounded-xl overflow-hidden shadow-2xl border bg-background/50 backdrop-blur-sm p-2">
                 <div className="relative w-full h-full rounded-lg overflow-hidden bg-muted">
                   <Image
-                    src="/images/curtain-closeup.jpg"
+                    src="/images/endurocide_standard.webp"
                     alt="Endurocide Curtain Technology"
                     fill
                     className="object-cover"
@@ -177,7 +177,7 @@ export default function Home() {
             </div>
             <div className="relative aspect-square lg:aspect-auto lg:h-[500px] rounded-xl overflow-hidden shadow-xl">
               <Image
-                src="/images/microscope-view.jpg"
+                src="/images/dotty-pattern.jpg"
                 alt="Microscopic view of Endurocide technology"
                 fill
                 className="object-cover"

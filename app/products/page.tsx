@@ -61,7 +61,7 @@ export default function Products() {
         { name: "Teal", hex: "#008080" },
         { name: "Grey", hex: "#808080" }
       ],
-      image: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663210229360/kKrHcMSMnwTdrFYn.jpg",
+      image: "/images/endurocide_standard.webp",
       tag: "Safety Compliant"
     },
     {
