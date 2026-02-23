@@ -1,0 +1,144 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { MobileNav } from "@/components/mobile-nav";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Endurocide NZ",
+    default: "Endurocide NZ - Antimicrobial Hospital Curtains",
+  },
+  description: "Endurocide® Antimicrobial & Sporicidal Curtains for New Zealand Healthcare. Proven to kill bacteria, spores, and viruses on contact.",
+  metadataBase: new URL("https://endurocide.nz"),
+  openGraph: {
+    type: "website",
+    locale: "en_NZ",
+    url: "https://endurocide.nz",
+    siteName: "Endurocide NZ",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Endurocide Antimicrobial Curtains",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@endurocide_nz",
+    creator: "@endurocide_nz",
+  },
+};
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/products", label: "Products" },
+  { href: "/guides", label: "Guides" },
+  { href: "/studies", label: "Clinical Studies" },
+  { href: "/news", label: "News" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+];
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.className)}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            <div className="min-h-screen flex flex-col">
+              {/* Header */}
+              <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                <div className="container max-w-[1000px] mx-auto px-4 md:px-8 flex h-16 items-center justify-between">
+                  <Link href="/" className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-primary tracking-tight">endurocide® NZ</span>
+                  </Link>
+
+                  {/* Desktop Nav */}
+                  <nav className="hidden md:flex items-center gap-8">
+                    {navItems.map((item) => (
+                      <Link key={item.href} href={item.href} className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground">
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+
+                  {/* Mobile Menu Toggle */}
+                  <MobileNav navItems={navItems} />
+                </div>
+              </header>
+
+              {/* Main Content */}
+              <main className="flex-1">{children}</main>
+
+              {/* Footer */}
+              <footer className="bg-muted py-12 border-t">
+                <div className="container max-w-[1000px] mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Image src="/logo.webp" alt="endurocide® NZ Logo" width={150} height={50} className="h-12 w-auto" />
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Advanced antimicrobial disposable curtains for superior infection control in healthcare environments.
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                      Kenco Limited are the official distributors of <strong>endurocide®</strong> for New Zealand.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-4 text-foreground">Products</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li><Link href="/products" className="hover:text-primary">Antimicrobial Curtains</Link></li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-4 text-foreground">Company</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li><Link href="/technology" className="hover:text-primary">Technology</Link></li>
+                      <li><Link href="/about" className="hover:text-primary">About Us</Link></li>
+                      <li><Link href="/contact" className="hover:text-primary">Contact</Link></li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-4 text-foreground">Contact</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                      <li>info@endurocide.nz</li>
+                      <li>+64 (0)21 029 66718</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="container max-w-[1000px] mx-auto px-4 md:px-8 mt-12 pt-8 border-t text-center text-xs text-muted-foreground">
+                  © {new Date().getFullYear()} endurocide® NZ. All rights reserved.
+                </div>
+              </footer>
+            </div>
+            <Toaster />
+          </TooltipProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
