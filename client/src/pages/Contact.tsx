@@ -53,13 +53,13 @@ export default function Contact() {
                 }
               }
             }
-          },
-          relationships: {
-            list: {
-              data: {
-                type: 'list',
-                id: WEB_ENQUIRIES_LIST_ID
-              }
+          }
+        },
+        relationships: {
+          list: {
+            data: {
+              type: 'list',
+              id: WEB_ENQUIRIES_LIST_ID
             }
           }
         }
