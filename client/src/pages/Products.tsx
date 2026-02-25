@@ -66,19 +66,28 @@ export default function Products() {
           "@context": "https://schema.org",
           "@type": "ItemList",
           "itemListElement": products.map((product, index) => ({
-            "@type": "Product",
+            "@type": "ListItem",
             "position": index + 1,
-            "name": product.title,
-            "description": product.description,
-            "image": `https://endurocide.nz${product.image}`,
-            "brand": {
-              "@type": "Brand",
-              "name": "endurocide"
-            },
-            "offers": {
-              "@type": "Offer",
-              "availability": "https://schema.org/InStock",
-              "priceCurrency": "NZD"
+            "item": {
+              "@type": "Product",
+              "name": product.title,
+              "description": product.description,
+              "image": product.image.startsWith("http") ? product.image : `https://endurocide.nz${product.image}`,
+              "brand": {
+                "@type": "Brand",
+                "name": "Endurocide"
+              },
+              "manufacturer": {
+                "@type": "Organization",
+                "name": "Endurocide"
+              },
+              "category": "Medical Device > Hospital Curtains",
+              "offers": {
+                "@type": "Offer",
+                "availability": "https://schema.org/InStock",
+                "priceCurrency": "NZD",
+                "url": "https://endurocide.nz/contact"
+              }
             }
           }))
         }}

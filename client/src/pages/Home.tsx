@@ -15,14 +15,21 @@ export default function Home() {
         structuredData={{
           "@context": "https://schema.org",
           "@type": "Organization",
-          "name": "endurocide New Zealand",
+          "name": "Endurocide New Zealand",
           "url": "https://endurocide.nz",
           "logo": "https://endurocide.nz/logo.webp",
+          "description": "Endurocide® provides patented antimicrobial disposable curtains that kill bacteria on contact. Proven infection control for hospitals and healthcare facilities in New Zealand.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Auckland",
+            "addressCountry": "NZ"
+          },
           "contactPoint": {
             "@type": "ContactPoint",
             "telephone": "+64-21-029-66718",
             "contactType": "customer service",
-            "areaServed": "NZ"
+            "areaServed": "NZ",
+            "availableLanguage": "English"
           },
           "sameAs": [
             "https://www.linkedin.com/company/kenco-ltd"

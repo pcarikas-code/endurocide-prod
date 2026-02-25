@@ -14,6 +14,38 @@ export default function ClinicalStudies() {
         title="Clinical Studies & Independent Testing Reports"
         description="Review independent laboratory reports and clinical studies validating endurocide's efficacy against MRSA, C.difficile, E.coli, and other pathogens."
         keywords="clinical studies, antimicrobial testing, hospital curtain efficacy, independent lab reports, infection control data"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "MedicalDevice",
+              "name": "Endurocide Antimicrobial Curtains",
+              "manufacturer": {
+                "@type": "Organization",
+                "name": "Endurocide"
+              },
+              "description": "Patented antimicrobial hospital curtains proven to kill bacteria, spores, and viruses on contact.",
+              "medicalSpecialty": "Infection Control"
+            },
+            {
+              "@type": "TechArticle",
+              "headline": "Clinical Studies & Independent Testing Reports",
+              "description": "Independent laboratory reports validating Endurocide's efficacy against MRSA, C.difficile, E.coli, and other pathogens.",
+              "author": {
+                "@type": "Organization",
+                "name": "Endurocide NZ"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Endurocide NZ",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://endurocide.nz/images/endurocide-logo.png"
+                }
+              }
+            }
+          ]
+        }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
