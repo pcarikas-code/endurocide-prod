@@ -12,7 +12,7 @@ export default function Monkeypox() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="/images/mpox-banner.png" 
+            src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663210229360/BQWQIZGNpJSGHnVi.png" 
             alt="Monkeypox Infection Control Banner" 
             className="w-full h-full object-cover object-top"
           />
