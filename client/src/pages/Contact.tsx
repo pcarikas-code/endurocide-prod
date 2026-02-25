@@ -8,6 +8,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SEO from "@/components/SEO";
 import { useState } from "react";
 
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -77,6 +83,15 @@ export default function Contact() {
       });
 
       if (response.ok || response.status === 202) {
+        // Push form submit event to GTM dataLayer
+        if (window.dataLayer) {
+          window.dataLayer.push({
+            event: 'form_submit',
+            form_name: 'Contact Us Form',
+            form_id: 'klaviyo-contact-form'
+          });
+        }
+
         setStatus("success");
         setFormData({
           firstName: "",
