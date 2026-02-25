@@ -1,4 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    dataLayer: any[];
+  }
+}
 import { Search as SearchIcon, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,6 +72,14 @@ export default function Search() {
   }, [query]);
 
   const handleSelect = (href: string) => {
+    // Push search event to GTM dataLayer
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'search',
+        search_term: query,
+        selected_result: href
+      });
+    }
     setLocation(href);
     setIsOpen(false);
     setQuery("");
