@@ -11,24 +11,121 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
-// Define searchable content
+// Define searchable content with keywords
 const searchableContent = [
-  { title: "Home", href: "/", type: "Page" },
-  { title: "Products", href: "/products", type: "Page" },
-  { title: "Technology", href: "/technology", type: "Page" },
-  { title: "Product Guides", href: "/guides", type: "Page" },
-  { title: "Clinical Studies", href: "/studies", type: "Page" },
-  { title: "News", href: "/news", type: "Page" },
-  { title: "About Us", href: "/about", type: "Page" },
-  { title: "Contact", href: "/contact", type: "Page" },
-  { title: "Monkeypox Infection Control", href: "/monkeypox-infection-control", type: "Page" },
+  // Pages
+  { 
+    title: "Home", 
+    href: "/", 
+    type: "Page",
+    keywords: "homepage, main, start, welcome"
+  },
+  { 
+    title: "Products", 
+    href: "/products", 
+    type: "Page",
+    keywords: "curtains, range, catalog, buy, order, types"
+  },
+  { 
+    title: "Technology", 
+    href: "/technology", 
+    type: "Page",
+    keywords: "how it works, science, antimicrobial, sporicidal, trap and kill, mechanism, efficacy"
+  },
+  { 
+    title: "Product Guides", 
+    href: "/guides", 
+    type: "Page",
+    keywords: "manuals, instructions, installation, changing, maintenance, resources, pdf, download"
+  },
+  { 
+    title: "Clinical Studies", 
+    href: "/studies", 
+    type: "Page",
+    keywords: "evidence, reports, testing, validation, independent, research, data, results"
+  },
+  { 
+    title: "News", 
+    href: "/news", 
+    type: "Page",
+    keywords: "blog, updates, articles, insights, latest"
+  },
+  { 
+    title: "About Us", 
+    href: "/about", 
+    type: "Page",
+    keywords: "company, kenco, distributor, contact, team, history"
+  },
+  { 
+    title: "Contact", 
+    href: "/contact", 
+    type: "Page",
+    keywords: "email, phone, address, quote, enquiry, support, help"
+  },
+  { 
+    title: "Monkeypox Infection Control", 
+    href: "/monkeypox-infection-control", 
+    type: "Page",
+    keywords: "mpox, virus, outbreak, prevention, safety"
+  },
+
+  // Specific Products
+  { 
+    title: "Standard Curtain", 
+    href: "/products", 
+    type: "Product",
+    keywords: "suspended ceiling, polypropylene, disposable, regular, blue, teal, grey"
+  },
+  { 
+    title: "Mesh Top Curtain", 
+    href: "/products", 
+    type: "Product",
+    keywords: "ceiling fixed, sprinkler compliant, airflow, fire safety, nfpa 13, mesh"
+  },
+  { 
+    title: "Long Drop Curtain", 
+    href: "/products", 
+    type: "Product",
+    keywords: "high ceilings, extra length, tall, extended, 2.6m"
+  },
+
   // News Articles
-  { title: "The Overlooked Vector: Mitigating HAIs", href: "/news/overlooked-vector-mitigating-hais", type: "News" },
-  { title: "Clinical Evidence: A Data-Driven Approach", href: "/news/clinical-evidence-data-driven-approach", type: "News" },
-  { title: "Beyond Bacteria: The Importance of Sporicidal Action", href: "/news/beyond-bacteria-importance-sporicidal-action", type: "News" },
-  { title: "Operational Efficiency: A Strategic Advantage", href: "/news/operational-efficiency-strategic-advantage", type: "News" },
-  { title: "Layered Defence: Integrating Curtains", href: "/news/layered-defence-integrating-curtains", type: "News" },
-  { title: "Long-Term Value: The Clinical & Financial Case", href: "/news/long-term-value-clinical-financial-case", type: "News" },
+  { 
+    title: "The Overlooked Vector: Mitigating HAIs", 
+    href: "/news/overlooked-vector-mitigating-hais", 
+    type: "News",
+    keywords: "hospital acquired infections, transmission, risk, prevention"
+  },
+  { 
+    title: "Clinical Evidence: A Data-Driven Approach", 
+    href: "/news/clinical-evidence-data-driven-approach", 
+    type: "News",
+    keywords: "statistics, proof, effectiveness, study results"
+  },
+  { 
+    title: "Beyond Bacteria: The Importance of Sporicidal Action", 
+    href: "/news/beyond-bacteria-importance-sporicidal-action", 
+    type: "News",
+    keywords: "spores, c.diff, difficult to kill, pathogens, spectrum"
+  },
+  { 
+    title: "Operational Efficiency: A Strategic Advantage", 
+    href: "/news/operational-efficiency-strategic-advantage", 
+    type: "News",
+    keywords: "cost savings, time, labor, changeover, budget"
+  },
+  { 
+    title: "Layered Defence: Integrating Curtains", 
+    href: "/news/layered-defence-integrating-curtains", 
+    type: "News",
+    keywords: "strategy, comprehensive, holistic, approach"
+  },
+  { 
+    title: "Long-Term Value: The Clinical & Financial Case", 
+    href: "/news/long-term-value-clinical-financial-case", 
+    type: "News",
+    keywords: "roi, investment, durability, 24 months, lifespan"
+  },
 ];
 
 export default function Search() {
@@ -66,7 +163,8 @@ export default function Search() {
 
     const lowerQuery = query.toLowerCase();
     const filtered = searchableContent.filter(item => 
-      item.title.toLowerCase().includes(lowerQuery)
+      item.title.toLowerCase().includes(lowerQuery) || 
+      item.keywords.toLowerCase().includes(lowerQuery)
     );
     setResults(filtered);
   }, [query]);
