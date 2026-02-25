@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function Products() {
   const products = [
@@ -93,6 +94,7 @@ export default function Products() {
         }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+        <Breadcrumbs items={[{ label: "Products", href: "/products" }]} />
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">endurocide® Antimicrobial Curtain Product Range</h1>
           <p className="text-lg text-muted-foreground">

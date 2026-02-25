@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Tag, Share2, Facebook, Twitter, Linkedin, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function Article() {
   const [, params] = useRoute("/news/:slug");
@@ -71,9 +72,37 @@ export default function Article() {
         title={`${post.title} - endurocide® NZ News`}
         description={post.excerpt}
         keywords={`endurocide, ${post.category}, infection control, hospital curtains`}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "description": post.excerpt,
+          "datePublished": post.date,
+          "dateModified": post.date,
+          "author": {
+            "@type": "Organization",
+            "name": "Endurocide NZ"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Endurocide NZ",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://endurocide.nz/logo.webp"
+            }
+          },
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": `https://endurocide.nz/news/${post.slug}`
+          }
+        }}
       />
 
       <div className="container max-w-[1000px] mx-auto px-4">
+        <Breadcrumbs items={[
+          { label: "News", href: "/news" },
+          { label: post.title, href: `/news/${post.slug}` }
+        ]} />
         <Link href="/news">
           <Button variant="ghost" className="mb-8 pl-0 hover:bg-transparent hover:text-primary">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to News

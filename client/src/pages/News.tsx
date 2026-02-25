@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import SEO from "@/components/SEO";
 import { blogPosts } from "@/data/blogPosts";
 import { Link } from "wouter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function News() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function News() {
         }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+        <Breadcrumbs items={[{ label: "News", href: "/news" }]} />
         <div className="max-w-[1000px] mx-auto text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">Insights & Updates</h1>
           <p className="text-lg text-muted-foreground">

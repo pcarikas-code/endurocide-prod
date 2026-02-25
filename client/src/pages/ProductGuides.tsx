@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function ProductGuides() {
   const documents = [
@@ -64,6 +65,7 @@ export default function ProductGuides() {
         }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+        <Breadcrumbs items={[{ label: "Product Guides", href: "/guides" }]} />
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">Product Guides, Downloads & Technical Resources</h1>
           <p className="text-lg text-muted-foreground">

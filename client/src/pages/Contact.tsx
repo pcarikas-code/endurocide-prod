@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { useState } from "react";
 
 declare global {
@@ -132,6 +133,7 @@ export default function Contact() {
         }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+        <Breadcrumbs items={[{ label: "Contact", href: "/contact" }]} />
         <div className="max-w-[1000px] mx-auto text-center mb-16">
           <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">Contact endurocide® New Zealand</h1>
           <p className="text-lg text-muted-foreground">

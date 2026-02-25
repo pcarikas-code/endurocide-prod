@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import SEO from "@/components/SEO";
 import { pathogenData } from "@/data/pathogenData";
 import { Link } from "wouter";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function ClinicalStudies() {
   return (
@@ -48,6 +49,7 @@ export default function ClinicalStudies() {
         }}
       />
       <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+        <Breadcrumbs items={[{ label: "Clinical Studies", href: "/clinical-studies" }]} />
         <div className="max-w-[1000px] mx-auto text-center mb-16 space-y-4">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">Clinical Studies & Independent Testing Reports</h1>
           <p className="text-lg text-muted-foreground">

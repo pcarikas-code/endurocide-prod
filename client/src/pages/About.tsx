@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { CheckCircle2 } from "lucide-react";
 import SEO from "@/components/SEO";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function About() {
   return (
@@ -14,6 +15,9 @@ export default function About() {
       {/* Hero */}
       <div className="bg-muted py-20">
         <div className="container max-w-[1000px] mx-auto px-4 md:px-8 text-center">
+          <div className="flex justify-center mb-6">
+            <Breadcrumbs items={[{ label: "About", href: "/about" }]} />
+          </div>
           <h1 className="text-4xl font-bold text-foreground mb-6">About endurocide® New Zealand</h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
             Dedicated to breaking the chain of infection in healthcare settings.
