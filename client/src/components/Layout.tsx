@@ -157,7 +157,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </ul>
             
             <a 
-              href="https://www.linkedin.com/company/kenco-ltd" 
+              href="https://www.linkedin.com/company/endurocide-new-zealand" 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-[#0077b5] hover:text-[#0077b5]/80 transition-colors"
