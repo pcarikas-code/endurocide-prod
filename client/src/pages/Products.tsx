@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import SocialShare from "@/components/SocialShare";
 
 export default function Products() {
   const products = [
@@ -209,6 +210,14 @@ export default function Products() {
               </TableBody>
             </Table>
           </div>
+        </div>
+
+        <div className="flex justify-center mb-12">
+          <SocialShare 
+            url={window.location.href} 
+            title="Endurocide® Antimicrobial Hospital Curtains - Product Range" 
+            className="bg-card p-4 rounded-full shadow-sm border"
+          />
         </div>
 
         {/* Comparison Table */}

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X, ShieldCheck, Linkedin } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Search from "@/components/Search";
@@ -156,6 +156,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <li>+64 (0)21 029 66718</li>
             </ul>
             
+            <a 
+              href="https://www.linkedin.com/company/kenco-ltd" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[#0077b5] hover:text-[#0077b5]/80 transition-colors"
+            >
+              <Linkedin className="h-5 w-5" />
+              Follow us on LinkedIn
+            </a>
 
           </div>
         </div>
