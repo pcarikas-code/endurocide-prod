@@ -77,9 +77,11 @@ export default function SEO({
 
     // Inject Structured Data (JSON-LD)
     if (structuredData) {
-      let script = document.querySelector('script[type="application/ld+json"]');
+      const scriptId = "seo-schema";
+      let script = document.getElementById(scriptId);
       if (!script) {
         script = document.createElement("script");
+        script.id = scriptId;
         script.setAttribute("type", "application/ld+json");
         document.head.appendChild(script);
       }

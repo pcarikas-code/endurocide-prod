@@ -21,13 +21,13 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://endurocide.nz"
+        "item": { "@id": "https://endurocide.nz" }
       },
       ...items.map((item, index) => ({
         "@type": "ListItem",
         "position": index + 2,
         "name": item.label,
-        "item": `https://endurocide.nz${item.href}`
+        "item": { "@id": `https://endurocide.nz${item.href}` }
       }))
     ]
   };

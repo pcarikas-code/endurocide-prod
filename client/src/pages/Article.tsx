@@ -54,8 +54,8 @@ export default function Article() {
           "@type": "BlogPosting",
           "headline": post.title,
           "description": post.excerpt,
-          "datePublished": post.date,
-          "dateModified": post.date,
+          "datePublished": new Date(post.date).toISOString(),
+          "dateModified": new Date(post.date).toISOString(),
           "author": {
             "@type": "Organization",
             "name": "Endurocide NZ"

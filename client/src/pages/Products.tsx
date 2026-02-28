@@ -74,7 +74,7 @@ export default function Products() {
               "@type": "Product",
               "name": product.title,
               "description": product.description,
-              "image": product.image.startsWith("http") ? product.image : `https://endurocide.nz${product.image}`,
+              "image": [product.image.startsWith("http") ? product.image : `https://endurocide.nz${product.image}`],
               "brand": {
                 "@type": "Brand",
                 "name": "Endurocide"
