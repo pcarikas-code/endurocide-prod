@@ -124,11 +124,36 @@ export default function Contact() {
           "@context": "https://schema.org",
           "@type": "ContactPage",
           "mainEntity": {
-            "@type": "Organization",
-            "name": "endurocide New Zealand",
+            "@type": "MedicalBusiness",
+            "name": "endurocide® New Zealand",
+            "image": "https://endurocide.nz/logo.webp",
             "telephone": "+64-21-029-66718",
             "email": "info@endurocide.nz",
-            "url": "https://endurocide.nz"
+            "url": "https://endurocide.nz",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Torbay",
+              "addressRegion": "Auckland",
+              "postalCode": "0630",
+              "addressCountry": "NZ"
+            },
+            "areaServed": {
+              "@type": "Country",
+              "name": "New Zealand"
+            },
+            "openingHoursSpecification": {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "09:00",
+              "closes": "17:00"
+            },
+            "priceRange": "$$"
           }
         }}
       />
