@@ -153,7 +153,10 @@ export default function Contact() {
               "opens": "09:00",
               "closes": "17:00"
             },
-            "priceRange": "$$"
+            "priceRange": "$$",
+            "sameAs": [
+              "https://www.linkedin.com/company/endurocide-new-zealand"
+            ]
           }
         }}
       />
