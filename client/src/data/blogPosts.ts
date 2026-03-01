@@ -2,6 +2,7 @@ export interface BlogPost {
   id: string;
   title: string;
   date: string;
+  lastUpdated?: string;
   category: string;
   excerpt: string;
   content: string;
@@ -13,6 +14,7 @@ export const blogPosts: BlogPost[] = [
     id: "1",
     title: "The Overlooked Vector: Mitigating HAIs with Advanced Privacy Curtains",
     date: "December 12, 2024",
+    lastUpdated: "March 02, 2026",
     category: "Infection Control",
     excerpt: "While hand hygiene and surface disinfection are rightly prioritized, privacy curtains are often an overlooked high-touch surface. Traditional textile curtains can harbour dangerous pathogens, with studies showing contamination with MRSA, VRE, and C. difficile often occurring within a week of laundering.",
     content: `
@@ -40,6 +42,7 @@ export const blogPosts: BlogPost[] = [
     id: "2",
     title: "Clinical Evidence: A Data-Driven Approach to Curtain Hygiene",
     date: "November 28, 2024",
+    lastUpdated: "March 01, 2026",
     category: "Research",
     excerpt: "A recent study published in Infection Prevention in Practice highlights the significant impact of these curtains in a clinical setting. The research found a dramatic reduction in bacterial load on the curtains after installation, with colony-forming units (CFUs) dropping from 32.6 to just 0.56.",
     content: `
@@ -61,6 +64,7 @@ export const blogPosts: BlogPost[] = [
     id: "3",
     title: "Beyond Bacteria: The Importance of Sporicidal Action",
     date: "November 15, 2024",
+    lastUpdated: "February 28, 2026",
     category: "Technology",
     excerpt: "C. difficile spores are notoriously resilient, capable of surviving on surfaces for months. Unlike traditional curtains, <strong>endurocide®</strong>'s patented technology is proven to be sporicidal, piercing the spore's protective coats and causing lethal DNA damage.",
     content: `

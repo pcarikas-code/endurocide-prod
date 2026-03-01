@@ -55,7 +55,7 @@ export default function Article() {
           "headline": post.title,
           "description": post.excerpt,
           "datePublished": new Date(post.date).toISOString(),
-          "dateModified": new Date(post.date).toISOString(),
+          "dateModified": new Date(post.lastUpdated || post.date).toISOString(),
           "author": {
             "@type": "Organization",
             "name": "Endurocide NZ"
@@ -95,6 +95,11 @@ export default function Article() {
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" /> {post.date}
               </span>
+              {post.lastUpdated && (
+                <span className="flex items-center gap-1 text-primary/80">
+                  <span className="mx-1">•</span> Updated: {post.lastUpdated}
+                </span>
+              )}
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-primary mb-8 leading-tight">
