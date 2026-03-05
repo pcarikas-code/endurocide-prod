@@ -36,6 +36,46 @@ export default function Home() {
           ]
         }}
       />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How do Endurocide® curtains work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The fabric is treated with a biocide that remains active for the lifetime of the curtain. When pathogens come into contact with the fabric, the biocide penetrates the cell wall, disrupting its function and killing the microorganism."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are they effective against COVID-19?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Endurocide® curtains have been independently tested and proven effective against enveloped viruses, including H1N1 and surrogates for SARS-CoV-2."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are the curtains recyclable?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, our curtains are made from 100% polypropylene and are fully recyclable. We are committed to sustainability and reducing medical waste in New Zealand landfills."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do they meet fire safety standards?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolutely. All Endurocide® curtains are flame retardant and meet international fire safety standards, including BS 5867 Part 2 Type C."
+              }
+            }
+          ]
+        })}
+      </script>
       
       {/* Hero Section - Optimized & Simplified */}
       <section className="w-full bg-muted flex justify-center overflow-hidden">
@@ -184,6 +224,52 @@ export default function Home() {
                 <Button className="mt-4" size="lg">Learn More About Technology</Button>
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-24 bg-background">
+        <div className="container max-w-[1000px] mx-auto px-4 md:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
+            <p className="text-muted-foreground text-lg">
+              Common questions about our antimicrobial curtain technology.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-bold mb-2">How do Endurocide® curtains work?</h3>
+                <p className="text-muted-foreground">
+                  The fabric is treated with a biocide that remains active for the lifetime of the curtain. When pathogens come into contact with the fabric, the biocide penetrates the cell wall, disrupting its function and killing the microorganism.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-bold mb-2">Are they effective against COVID-19?</h3>
+                <p className="text-muted-foreground">
+                  Yes, Endurocide® curtains have been independently tested and proven effective against enveloped viruses, including H1N1 and surrogates for SARS-CoV-2.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-bold mb-2">Are the curtains recyclable?</h3>
+                <p className="text-muted-foreground">
+                  Yes, our curtains are made from 100% polypropylene and are fully recyclable. We are committed to sustainability and reducing medical waste in New Zealand landfills.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
+                <h3 className="text-lg font-bold mb-2">Do they meet fire safety standards?</h3>
+                <p className="text-muted-foreground">
+                  Absolutely. All Endurocide® curtains are flame retardant and meet international fire safety standards, including BS 5867 Part 2 Type C.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
