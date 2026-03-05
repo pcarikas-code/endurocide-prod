@@ -15,7 +15,7 @@ export default function SEO({
   description,
   keywords = "endurocide, antimicrobial curtains, hospital curtains, infection control, healthcare curtains, disposable curtains",
   image = "/og-image.jpg",
-  url = window.location.href,
+  url = window.location.href.replace(/^http:/, "https:"),
   type = "website",
   structuredData,
 }: SEOProps) {
