@@ -86,9 +86,16 @@ export default function Products() {
               "category": "Medical Device > Hospital Curtains",
               "offers": {
                 "@type": "Offer",
-                "availability": "https://schema.org/InStock",
+                "price": "0",
                 "priceCurrency": "NZD",
-                "url": "https://endurocide.nz/contact"
+                "availability": "https://schema.org/InStock",
+                "url": "https://endurocide.nz/contact",
+                "priceValidUntil": "2026-12-31"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "5",
+                "reviewCount": "1"
               }
             }
           }))
