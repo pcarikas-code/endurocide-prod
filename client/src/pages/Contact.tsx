@@ -40,41 +40,75 @@ export default function Contact() {
     setStatus("submitting");
     setErrorMessage("");
 
-    const subscribePayload = {
+    // Step 1: Create or Update Profile
+    const profilePayload = {
       data: {
-        type: 'subscription',
+        type: 'profile',
         attributes: {
-          custom_source: 'Contact Us Form',
-          profile: {
-            data: {
-              type: 'profile',
-              attributes: {
-                email: formData.email,
-                first_name: formData.firstName,
-                last_name: formData.lastName,
-                phone_number: formData.phone || undefined,
-                organization: formData.company || undefined,
-                properties: {
-                  message: formData.message,
-                  source: 'Contact Us Form'
-                }
-              }
-            }
-          }
-        },
-        relationships: {
-          list: {
-            data: {
-              type: 'list',
-              id: WEB_ENQUIRIES_LIST_ID
-            }
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          organization: formData.company || undefined,
+          phone_number: formData.phone || undefined,
+          properties: {
+            message: formData.message,
+            source: 'Contact Us Form'
           }
         }
       }
     };
 
     try {
-      const response = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${KLAVIYO_PUBLIC_API_KEY}`, {
+      // 1. Create/Update Profile
+      const profileResponse = await fetch(`https://a.klaviyo.com/client/profiles/?company_id=${KLAVIYO_PUBLIC_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'revision': '2024-10-15'
+        },
+        body: JSON.stringify(profilePayload)
+      });
+
+      if (!profileResponse.ok && profileResponse.status !== 202) {
+        const text = await profileResponse.text();
+        console.error('Klaviyo Profile API error:', text);
+        throw new Error(`Profile creation failed: ${profileResponse.status}`);
+      }
+
+      // 2. Subscribe to List
+      const subscribePayload = {
+        data: {
+          type: 'subscription',
+          attributes: {
+            custom_source: 'Contact Us Form',
+            profile: {
+              data: {
+                type: 'profile',
+                attributes: {
+                  email: formData.email,
+                  subscriptions: {
+                    email: {
+                      marketing: {
+                        consent: 'SUBSCRIBED'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          relationships: {
+            list: {
+              data: {
+                type: 'list',
+                id: WEB_ENQUIRIES_LIST_ID
+              }
+            }
+          }
+        }
+      };
+
+      const subscribeResponse = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${KLAVIYO_PUBLIC_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +117,7 @@ export default function Contact() {
         body: JSON.stringify(subscribePayload)
       });
 
-      if (response.ok || response.status === 202) {
+      if (subscribeResponse.ok || subscribeResponse.status === 202) {
         // Push form submit event to GTM dataLayer
         if (window.dataLayer) {
           window.dataLayer.push({
@@ -103,9 +137,9 @@ export default function Contact() {
           message: ""
         });
       } else {
-        const text = await response.text();
-        console.error('Klaviyo API error:', text);
-        throw new Error(`API returned status ${response.status}`);
+        const text = await subscribeResponse.text();
+        console.error('Klaviyo Subscription API error:', text);
+        throw new Error(`Subscription failed: ${subscribeResponse.status}`);
       }
     } catch (error) {
       console.error('Submission error:', error);
