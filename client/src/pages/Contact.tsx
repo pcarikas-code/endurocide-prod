@@ -35,10 +35,36 @@ export default function Contact() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const formatPhoneNumber = (phone: string) => {
+    // Remove non-numeric characters
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // If empty, return undefined
+    if (!cleaned) return undefined;
+
+    // If it starts with '0', replace with '+64' (assuming NZ)
+    if (cleaned.startsWith('0')) {
+      return '+64' + cleaned.substring(1);
+    }
+    
+    // If it doesn't start with '+', add '+'
+    if (!phone.startsWith('+')) {
+      // If it looks like a local number (e.g., 9 digits), assume NZ +64
+      if (cleaned.length >= 8 && cleaned.length <= 10) {
+        return '+64' + cleaned;
+      }
+      return '+' + cleaned;
+    }
+
+    return phone;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
     setErrorMessage("");
+
+    const formattedPhone = formData.phone ? formatPhoneNumber(formData.phone) : undefined;
 
     // Step 1: Create or Update Profile
     const profilePayload = {
@@ -49,7 +75,7 @@ export default function Contact() {
           first_name: formData.firstName,
           last_name: formData.lastName,
           organization: formData.company || undefined,
-          phone_number: formData.phone || undefined,
+          phone_number: formattedPhone,
           properties: {
             message: formData.message,
             source: 'Contact Us Form'
@@ -60,6 +86,7 @@ export default function Contact() {
 
     try {
       // 1. Create/Update Profile
+      console.log('Sending Profile Update:', profilePayload);
       const profileResponse = await fetch(`https://a.klaviyo.com/client/profiles/?company_id=${KLAVIYO_PUBLIC_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -72,7 +99,9 @@ export default function Contact() {
       if (!profileResponse.ok && profileResponse.status !== 202) {
         const text = await profileResponse.text();
         console.error('Klaviyo Profile API error:', text);
-        throw new Error(`Profile creation failed: ${profileResponse.status}`);
+        // Don't throw here, try to subscribe anyway so we at least get the email
+      } else {
+        console.log('Profile Update Success');
       }
 
       // 2. Subscribe to List
@@ -108,6 +137,7 @@ export default function Contact() {
         }
       };
 
+      console.log('Sending Subscription:', subscribePayload);
       const subscribeResponse = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${KLAVIYO_PUBLIC_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -118,6 +148,7 @@ export default function Contact() {
       });
 
       if (subscribeResponse.ok || subscribeResponse.status === 202) {
+        console.log('Subscription Success');
         // Push form submit event to GTM dataLayer
         if (window.dataLayer) {
           window.dataLayer.push({
@@ -139,7 +170,7 @@ export default function Contact() {
       } else {
         const text = await subscribeResponse.text();
         console.error('Klaviyo Subscription API error:', text);
-        throw new Error(`Subscription failed: ${subscribeResponse.status}`);
+        throw new Error(`Subscription failed: ${subscribeResponse.status} - ${text}`);
       }
     } catch (error) {
       console.error('Submission error:', error);
