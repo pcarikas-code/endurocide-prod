@@ -26,6 +26,7 @@ export default function Contact() {
   });
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [phoneError, setPhoneError] = useState<string>("");
 
   const KLAVIYO_PUBLIC_API_KEY = 'W72Cww';
   const WEB_ENQUIRIES_LIST_ID = 'RnuUrp';
@@ -33,6 +34,27 @@ export default function Contact() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear phone error as user types if it becomes valid
+    if (name === 'phone' && phoneError) {
+      const digitsOnly = value.replace(/\D/g, '');
+      if (digitsOnly.length >= 8) {
+        setPhoneError('');
+      }
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    if (formData.phone) {
+      const digitsOnly = formData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 8) {
+        setPhoneError('Please enter a valid phone number with at least 8 digits.');
+      } else {
+        setPhoneError('');
+      }
+    } else {
+      setPhoneError('');
+    }
   };
 
   const formatPhoneNumber = (phone: string) => {
@@ -63,6 +85,17 @@ export default function Contact() {
     e.preventDefault();
     setStatus("submitting");
     setErrorMessage("");
+
+    // Final validation before submission
+    if (formData.phone) {
+      const digitsOnly = formData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 8) {
+        setPhoneError('Please enter a valid phone number with at least 8 digits.');
+        setStatus("error");
+        setErrorMessage("Please fix the errors in the form.");
+        return;
+      }
+    }
 
     const formattedPhone = formData.phone ? formatPhoneNumber(formData.phone) : undefined;
 
@@ -334,7 +367,12 @@ export default function Contact() {
                 placeholder="e.g. 021 123 4567"
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={handlePhoneBlur}
+                className={phoneError ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
+              {phoneError && (
+                <p className="text-sm text-red-500 mt-1">{phoneError}</p>
+              )}
             </div>
                       <div className="space-y-2">
                         <Label htmlFor="company">Company</Label>
