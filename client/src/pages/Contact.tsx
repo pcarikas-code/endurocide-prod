@@ -115,13 +115,8 @@ export default function Contact() {
                 type: 'profile',
                 attributes: {
                   email: formData.email,
-                  subscriptions: {
-                    email: {
-                      marketing: {
-                        consent: 'SUBSCRIBED'
-                      }
-                    }
-                  }
+                  // Phone number is optional but good to include if available
+                  phone_number: formattedPhone
                 }
               }
             }
