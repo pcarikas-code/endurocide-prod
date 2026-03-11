@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Layout from "@/components/Layout";
 import ScrollToTop from "@/components/ScrollToTop";
 import { CanonicalUrl } from "@/components/CanonicalUrl";
+import GTMTracking from "@/components/GTMTracking";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Technology from "./pages/Technology";
@@ -25,6 +26,7 @@ function Router() {
     <Layout>
       <ScrollToTop />
       <CanonicalUrl />
+      <GTMTracking />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/products" component={Products} />
