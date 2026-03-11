@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Layout from "@/components/Layout";
 import ScrollToTop from "@/components/ScrollToTop";
 import { CanonicalUrl } from "@/components/CanonicalUrl";
+import LegacyRedirects from "@/components/LegacyRedirects";
 import GTMTracking from "@/components/GTMTracking";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -26,6 +27,7 @@ function Router() {
     <Layout>
       <ScrollToTop />
       <CanonicalUrl />
+      <LegacyRedirects />
       <GTMTracking />
       <Switch>
         <Route path="/" component={Home} />
