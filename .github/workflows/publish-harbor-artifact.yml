@@ -1,0 +1,231 @@
+name: Publish Harbor Hub Endurocide artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Type PUBLISH ENDUROCIDE ARTIFACT exactly"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: harbor-hub-endurocide-artifact
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-southeast-2
+  PINNED_COMMIT_SHA: 4eca0ac71699e45209fd8d51901d151c9a747893
+  ARTIFACT_PREFIX: artifacts/endurocide
+  NODE_BASE_IMAGE_DIGEST: sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+
+jobs:
+  publish:
+    name: Build and publish immutable image archive
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Validate publication confirmation
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$CONFIRMATION" = "PUBLISH ENDUROCIDE ARTIFACT"
+
+      - name: Check out the protected workflow revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate protected workflow revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm check
+          pnpm build
+
+      - name: Select and verify immutable application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$PINNED_COMMIT_SHA"
+          git clean -ffdx
+          test "$(git rev-parse HEAD)" = "$PINNED_COMMIT_SHA"
+          test "$(git status --porcelain)" = ""
+
+      - name: Validate immutable application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm check
+          pnpm build
+
+      - name: Build and health-test the pinned container image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$NODE_BASE_IMAGE_DIGEST" = "sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50"
+          cat > /tmp/Dockerfile.harbor-pinned <<'DOCKERFILE'
+          FROM node:22-alpine@sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50 AS builder
+
+          WORKDIR /app
+          COPY package.json pnpm-lock.yaml ./
+          COPY patches ./patches
+          RUN corepack enable && pnpm install --frozen-lockfile
+          COPY . .
+          RUN pnpm build && pnpm prune --prod
+
+          FROM node:22-alpine@sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+
+          ARG APPLICATION_COMMIT_SHA
+          ARG WORKFLOW_COMMIT_SHA
+          LABEL org.opencontainers.image.source="https://github.com/pcarikas-code/endurocide-prod" \
+                org.opencontainers.image.revision="${APPLICATION_COMMIT_SHA}" \
+                io.harbor-hub.workflow-sha="${WORKFLOW_COMMIT_SHA}"
+
+          WORKDIR /app
+          ENV NODE_ENV=production
+          ENV PORT=3000
+          COPY --from=builder --chown=node:node /app/package.json /app/pnpm-lock.yaml ./
+          COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+          COPY --from=builder --chown=node:node /app/dist ./dist
+          COPY --from=builder --chown=node:node /app/shared ./shared
+          USER node
+          EXPOSE 3000
+          HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+            CMD node -e "require('http').get('http://127.0.0.1:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+          CMD ["node", "dist/index.js"]
+          DOCKERFILE
+          test "$(grep -Fc "FROM node:22-alpine@${NODE_BASE_IMAGE_DIGEST}" /tmp/Dockerfile.harbor-pinned)" -eq 2
+          docker build --pull --platform linux/amd64 \
+            --build-arg "APPLICATION_COMMIT_SHA=${PINNED_COMMIT_SHA}" \
+            --build-arg "WORKFLOW_COMMIT_SHA=${GITHUB_SHA}" \
+            --file /tmp/Dockerfile.harbor-pinned \
+            --tag "endurocide:${PINNED_COMMIT_SHA}" .
+          test "$(docker image inspect --format '{{.Config.User}}' "endurocide:${PINNED_COMMIT_SHA}")" = "node"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "endurocide:${PINNED_COMMIT_SHA}")" = "$PINNED_COMMIT_SHA"
+          test "$(docker image inspect --format '{{ index .Config.Labels "io.harbor-hub.workflow-sha" }}' "endurocide:${PINNED_COMMIT_SHA}")" = "$GITHUB_SHA"
+          docker network create harbor-endurocide-artifact-test
+          cleanup() {
+            docker rm --force endurocide-artifact-test >/dev/null 2>&1 || true
+            docker network rm harbor-endurocide-artifact-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          docker run --detach --name endurocide-artifact-test --network harbor-endurocide-artifact-test "endurocide:${PINNED_COMMIT_SHA}"
+          for attempt in $(seq 1 45); do
+            health="$(docker inspect --format '{{.State.Health.Status}}' endurocide-artifact-test)"
+            if [ "$health" = healthy ]; then
+              exit 0
+            fi
+            if [ "$health" = unhealthy ]; then
+              docker logs endurocide-artifact-test
+              exit 1
+            fi
+            sleep 2
+          done
+          docker logs endurocide-artifact-test
+          exit 1
+
+      - name: Create immutable archive and bounded manifest
+        id: artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p harbor-artifact
+          archive="harbor-artifact/endurocide-image-${PINNED_COMMIT_SHA}.tar.gz"
+          docker save "endurocide:${PINNED_COMMIT_SHA}" | gzip -n -9 >"$archive"
+          artifact_sha256="$(sha256sum "$archive" | cut -d' ' -f1)"
+          artifact_size_bytes="$(stat -c %s "$archive")"
+          artifact_key="${ARTIFACT_PREFIX}/${PINNED_COMMIT_SHA}/runs/${GITHUB_RUN_ID}/endurocide-image-${artifact_sha256}.tar.gz"
+          manifest_key="${ARTIFACT_PREFIX}/${PINNED_COMMIT_SHA}/runs/${GITHUB_RUN_ID}/manifest-${artifact_sha256}.json"
+          created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          jq -n \
+            --arg application "endurocide" \
+            --arg repository "pcarikas-code/endurocide-prod" \
+            --arg branch "main" \
+            --arg commitSha "$PINNED_COMMIT_SHA" \
+            --arg image "endurocide:${PINNED_COMMIT_SHA}" \
+            --arg artifactKey "$artifact_key" \
+            --arg manifestKey "$manifest_key" \
+            --arg artifactSha256 "$artifact_sha256" \
+            --arg nodeBaseImageDigest "$NODE_BASE_IMAGE_DIGEST" \
+            --arg createdAt "$created_at" \
+            --arg workflowCommitSha "$GITHUB_SHA" \
+            --arg workflowRunId "$GITHUB_RUN_ID" \
+            --arg workflowRunAttempt "$GITHUB_RUN_ATTEMPT" \
+            --argjson artifactSizeBytes "$artifact_size_bytes" \
+            '{schemaVersion:1,application:$application,repository:$repository,branch:$branch,commitSha:$commitSha,image:$image,platform:"linux/amd64",archiveFormat:"docker-image-tar+gzip",healthPath:"/api/health",artifactKey:$artifactKey,manifestKey:$manifestKey,artifactSha256:$artifactSha256,artifactSizeBytes:$artifactSizeBytes,baseImages:{node:$nodeBaseImageDigest},createdAt:$createdAt,workflowCommitSha:$workflowCommitSha,workflowRunId:$workflowRunId,workflowRunAttempt:$workflowRunAttempt}' \
+            > harbor-artifact/manifest.json
+          test "$(stat -c %s harbor-artifact/manifest.json)" -le 8192
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+          echo "artifact_key=$artifact_key" >> "$GITHUB_OUTPUT"
+          echo "manifest_key=$manifest_key" >> "$GITHUB_OUTPUT"
+          echo "artifact_sha256=$artifact_sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Configure short-lived AWS credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        with:
+          role-to-assume: ${{ vars.AWS_ARTIFACT_ROLE_ARN }}
+          role-session-name: harbor-hub-endurocide-artifact
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Publish archive and manifest to private S3
+        shell: bash
+        env:
+          ARTIFACT_BUCKET: ${{ vars.AWS_ARTIFACT_BUCKET }}
+          ARCHIVE: ${{ steps.artifact.outputs.archive }}
+          ARTIFACT_KEY: ${{ steps.artifact.outputs.artifact_key }}
+          MANIFEST_KEY: ${{ steps.artifact.outputs.manifest_key }}
+          ARTIFACT_SHA256: ${{ steps.artifact.outputs.artifact_sha256 }}
+        run: |
+          set -euo pipefail
+          test -n "$ARTIFACT_BUCKET"
+          aws s3api put-object \
+            --bucket "$ARTIFACT_BUCKET" \
+            --key "$ARTIFACT_KEY" \
+            --body "$ARCHIVE" \
+            --if-none-match "*" \
+            --content-type application/gzip \
+            --metadata "commit=${PINNED_COMMIT_SHA},sha256=${ARTIFACT_SHA256},managed-by=harbor-hub"
+          aws s3api put-object \
+            --bucket "$ARTIFACT_BUCKET" \
+            --key "$MANIFEST_KEY" \
+            --body harbor-artifact/manifest.json \
+            --if-none-match "*" \
+            --content-type application/json \
+            --metadata "commit=${PINNED_COMMIT_SHA},managed-by=harbor-hub"
+
+      - name: Write non-secret workflow summary
+        shell: bash
+        run: |
+          {
+            echo "## Harbor Hub Endurocide artifact published"
+            echo
+            echo "- Repository: pcarikas-code/endurocide-prod"
+            echo "- Application commit: \`${PINNED_COMMIT_SHA}\`"
+            echo "- Workflow commit: \`${GITHUB_SHA}\`"
+            echo "- SHA-256: \`${{ steps.artifact.outputs.artifact_sha256 }}\`"
+            echo "- Deployment: not started"
+            echo "- Host, DNS, TLS, monitoring, database, and Plesk: unchanged"
+          } >> "$GITHUB_STEP_SUMMARY"
