@@ -20,9 +20,14 @@ CADDYFILE="/opt/harbor-hub/edge/nca-pilot/Caddyfile"
 RELEASE="/opt/harbor-hub/tenants/endurocide/releases/${COMMIT}"
 CURRENT="/opt/harbor-hub/tenants/endurocide/current"
 COMPOSE="${RELEASE}/compose.yaml"
+failure_reason="command_failed"
+mutation_attempted=0
+baseline_ready=0
+rollback_success=0
 
 stop() {
   local reason="$1"
+  failure_reason="$reason"
   printf '{"status":"stopped","reason":"%s"}\n' "$reason"
   exit 1
 }
@@ -34,6 +39,77 @@ secure_regular_file() {
   mode="$(stat -c '%a' "$path")"
   (( (8#$mode & 0022) == 0 )) || stop "required_file_writable"
 }
+
+cleanup() {
+  local rc=$?
+  local cleanup_failed=0
+  local container_present=false
+  local current_linked=false
+  trap - EXIT HUP INT TERM
+  set +e
+  if (( rc != 0 && mutation_attempted == 1 )); then
+    if [[ -n "$(docker ps -aq --filter name='^/endurocide-origin$' 2>/dev/null)" ]]; then
+      docker rm -f "$CONTAINER" >/dev/null 2>&1 || cleanup_failed=1
+    fi
+    if [[ -L "$CURRENT" ]] && [[ "$(readlink -f "$CURRENT" 2>/dev/null)" == "$RELEASE" ]]; then
+      rm -f -- "$CURRENT" || cleanup_failed=1
+    fi
+    [[ -z "$(docker ps -aq --filter label=com.docker.compose.project="$PROJECT" 2>/dev/null)" ]] || cleanup_failed=1
+    [[ -z "$(docker ps -aq --filter name='^/endurocide-origin$' 2>/dev/null)" ]] || { cleanup_failed=1; container_present=true; }
+    [[ ! -e "$CURRENT" && ! -L "$CURRENT" ]] || { cleanup_failed=1; current_linked=true; }
+    if (( baseline_ready == 1 )); then
+      [[ "$(docker ps --format '{{.Names}}' 2>/dev/null | sort)" == $'nca-edge\nnca-pilot-nca-site-1' ]] || cleanup_failed=1
+      [[ "$(docker inspect --format '{{.Id}}' "$NCA_APP" 2>/dev/null)" == "$nca_app_id" ]] || cleanup_failed=1
+      [[ "$(docker inspect --format '{{.Id}}' "$NCA_EDGE" 2>/dev/null)" == "$nca_edge_id" ]] || cleanup_failed=1
+      [[ "$(sha256sum "$CADDYFILE" 2>/dev/null | cut -d' ' -f1)" == "$caddyfile_sha" ]] || cleanup_failed=1
+      [[ "$(docker exec "$NCA_EDGE" caddy adapt --config /etc/caddy/Caddyfile --pretty 2>/dev/null | sha256sum | cut -d' ' -f1)" == "$active_caddy_sha" ]] || cleanup_failed=1
+      for host in pilot.nca.co.za nca.co.za www.nca.co.za; do
+        [[ "$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --resolve "${host}:443:127.0.0.1" --max-time 15 "https://${host}/" 2>/dev/null)" == "200" ]] || cleanup_failed=1
+      done
+    fi
+    if [[ -d "$RELEASE" && ! -L "$RELEASE" ]]; then
+      python3 - "$RELEASE" "$COMMIT" "$failure_reason" "$cleanup_failed" "$container_present" "$current_linked" <<'PY' || cleanup_failed=1
+import datetime
+import json
+import pathlib
+import sys
+release, commit, reason, cleanup_failed, container_present, current_linked = sys.argv[1:]
+incomplete = cleanup_failed != "0"
+evidence = {
+    "schemaVersion": 1,
+    "status": "cleanup_incomplete" if incomplete else "cleaned_after_failure",
+    "manualReviewRequired": incomplete,
+    "reason": reason,
+    "application": "endurocide",
+    "commitSha": commit,
+    "containerPresent": container_present == "true",
+    "currentReleaseLinked": current_linked == "true",
+    "imageRetained": True,
+    "releaseEvidenceRetained": True,
+    "completedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+}
+path = pathlib.Path(release) / "rollback-failure-evidence.json"
+temporary = path.with_suffix(".json.tmp")
+temporary.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+temporary.chmod(0o640)
+temporary.replace(path)
+PY
+      chown root:docker "${RELEASE}/rollback-failure-evidence.json" >/dev/null 2>&1 || cleanup_failed=1
+    else
+      cleanup_failed=1
+    fi
+    if (( cleanup_failed != 0 )); then
+      printf '{"status":"cleanup_incomplete","reason":"%s","manualReviewRequired":true,"containerPresent":%s,"currentReleaseLinked":%s}\n' "$failure_reason" "$container_present" "$current_linked" >&2
+      exit 70
+    fi
+    printf '{"status":"cleaned_after_failure","reason":"%s","manualReviewRequired":false,"containerPresent":false,"currentReleaseLinked":false}\n' "$failure_reason" >&2
+  fi
+  exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 for path in "$NCA_LOCK" "$OWN_LOCK"; do
   [[ -f "$path" && ! -L "$path" ]] || stop "required_lock_missing"
@@ -57,12 +133,14 @@ nca_app_id="$(docker inspect --format '{{.Id}}' "$NCA_APP")"
 nca_edge_id="$(docker inspect --format '{{.Id}}' "$NCA_EDGE")"
 caddyfile_sha="$(sha256sum "$CADDYFILE" | cut -d' ' -f1)"
 active_caddy_sha="$(docker exec "$NCA_EDGE" caddy adapt --config /etc/caddy/Caddyfile --pretty 2>/dev/null | sha256sum | cut -d' ' -f1)"
+baseline_ready=1
 for host in pilot.nca.co.za nca.co.za www.nca.co.za; do
   [[ "$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --resolve "${host}:443:127.0.0.1" --max-time 15 "https://${host}/")" == "200" ]] || stop "nca_local_https_preflight_failed"
 done
 
-docker compose --project-name "$PROJECT" --file "$COMPOSE" stop "$SERVICE"
-docker compose --project-name "$PROJECT" --file "$COMPOSE" rm -f "$SERVICE"
+mutation_attempted=1
+docker compose --project-name "$PROJECT" --file "$COMPOSE" stop "$SERVICE" || stop "rollback_stop_failed"
+docker compose --project-name "$PROJECT" --file "$COMPOSE" rm -f "$SERVICE" || stop "rollback_remove_failed"
 [[ -z "$(docker ps -aq --filter label=com.docker.compose.project="$PROJECT")" ]] || stop "endurocide_container_remains"
 rm -f -- "$CURRENT"
 
@@ -105,4 +183,6 @@ tmp.chmod(0o640)
 tmp.replace(path)
 PY
 chown root:docker "${RELEASE}/rollback-evidence.json"
+rollback_success=1
+trap - EXIT HUP INT TERM
 printf '{"status":"rolled_back_to_undeployed","application":"endurocide","commitSha":"%s","containerPresent":false,"currentReleaseLinked":false,"imageRetained":true,"releaseEvidenceRetained":true,"ncaNonInterferenceVerified":true,"caddyChanged":false,"dnsChanged":false,"monitoringChanged":false,"databaseChanged":false,"pleskChanged":false}\n' "$COMMIT"
