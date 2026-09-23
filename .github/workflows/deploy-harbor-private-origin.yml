@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: harbor-hub-endurocide-private-origin
@@ -176,7 +177,13 @@ jobs:
           rollback_script_sha256="$(git show "${GITHUB_SHA}:.github/harbor-hub/endurocide-rollback.sh" | sha256sum | cut -d' ' -f1)"
           echo "deploy_script_sha256=${deploy_script_sha256}" >> "$GITHUB_OUTPUT"
           echo "rollback_script_sha256=${rollback_script_sha256}" >> "$GITHUB_OUTPUT"
-          chmod 0400 harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json
+          oidc_response="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 15 --retry 0 \
+            --header "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=harbor-hub-endurocide-private-origin")"
+          printf '%s' "$oidc_response" | jq -er '.value | select(type == "string" and length > 100)' > harbor-deploy/github-oidc.jwt
+          test "$(awk -F. 'NF == 3 {print NF}' harbor-deploy/github-oidc.jwt)" = "3"
+          test "$(stat -c %s harbor-deploy/github-oidc.jwt)" -le 16384
+          chmod 0400 harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt
 
       - name: Configure the dedicated SSH connection
         shell: bash
@@ -205,6 +212,7 @@ jobs:
         run: |
           set -euo pipefail
           remote_dir="/home/${DEPLOY_USER}/incoming/${GITHUB_RUN_ID}"
+          remote_created=0
           ssh_options=(
             -i "$HOME/.ssh/endurocide-deploy"
             -o BatchMode=yes
@@ -213,11 +221,23 @@ jobs:
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
             -o ConnectTimeout=15
           )
+          cleanup() {
+            rc=$?
+            trap - EXIT HUP INT TERM
+            if [ "$remote_created" = 1 ]; then
+              ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "rm -rf -- '${remote_dir}'" >/dev/null 2>&1 || true
+            fi
+            exit "$rc"
+          }
+          trap cleanup EXIT HUP INT TERM
           ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "test ! -e '${remote_dir}' && install -d -m 0700 '${remote_dir}'"
-          scp "${ssh_options[@]}" harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_dir}/"
+          remote_created=1
+          scp "${ssh_options[@]}" harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_dir}/"
           ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-deploy | cut -d' ' -f1)\" = '${DEPLOY_SCRIPT_SHA256}' && test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-rollback | cut -d' ' -f1)\" = '${ROLLBACK_SCRIPT_SHA256}'"
-          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 0400 '${remote_dir}/endurocide-image.tar.gz' '${remote_dir}/deployment-manifest.json' && sudo -n /usr/local/libexec/harbor-hub-endurocide-deploy '${remote_dir}'"
+          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 0400 '${remote_dir}/endurocide-image.tar.gz' '${remote_dir}/deployment-manifest.json' '${remote_dir}/github-oidc.jwt' && sudo -n /usr/local/libexec/harbor-hub-endurocide-deploy '${remote_dir}'"
           ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "rm -rf -- '${remote_dir}'"
+          remote_created=0
+          trap - EXIT HUP INT TERM
 
       - name: Remove ephemeral runner SSH material
         if: always()
