@@ -20,6 +20,9 @@ env:
   PINNED_COMMIT_SHA: 4eca0ac71699e45209fd8d51901d151c9a747893
   NODE_BASE_IMAGE_DIGEST: sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
   DEPLOY_USER: harbor-deploy
+  AWS_REGION: ap-southeast-2
+  SSM_PLUGIN_VERSION: 1.2.835.0
+  SSM_PLUGIN_SHA256: 7c6dcad12518571cc7959a713e6a8ae1bdf6ed66fd9bee37dc189e39ca58ae03
 
 jobs:
   deploy:
@@ -185,28 +188,67 @@ jobs:
           test "$(stat -c %s harbor-deploy/github-oidc.jwt)" -le 16384
           chmod 0400 harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt
 
-      - name: Configure the dedicated SSH connection
+      - name: Configure exact AWS private-transport credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_PRIVATE_ORIGIN_ROLE_ARN }}
+          role-session-name: endurocide-${{ github.run_id }}
+          role-duration-seconds: 900
+
+      - name: Install the checksum-pinned Session Manager plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          plugin_deb="$(mktemp /tmp/session-manager-plugin.XXXXXX.deb)"
+          cleanup() {
+            rm -f -- "$plugin_deb"
+          }
+          trap cleanup EXIT HUP INT TERM
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --max-time 60 --retry 0 \
+            "https://s3.amazonaws.com/session-manager-downloads/plugin/${SSM_PLUGIN_VERSION}/ubuntu_64bit/session-manager-plugin.deb" \
+            --output "$plugin_deb"
+          test "$(sha256sum "$plugin_deb" | cut -d' ' -f1)" = "$SSM_PLUGIN_SHA256"
+          sudo dpkg --install "$plugin_deb" >/dev/null
+          session-manager-plugin --version | grep -F "$SSM_PLUGIN_VERSION" >/dev/null
+
+      - name: Configure the dedicated SSH-over-Session-Manager connection
         shell: bash
         env:
-          DEPLOY_HOST: ${{ secrets.ENDUROCIDE_DEPLOY_HOST }}
+          SSM_TARGET: ${{ secrets.ENDUROCIDE_SSM_TARGET }}
           SSH_PRIVATE_KEY: ${{ secrets.ENDUROCIDE_DEPLOY_SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ secrets.ENDUROCIDE_DEPLOY_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          test -n "$DEPLOY_HOST"
+          test "$SSM_TARGET" != ""
+          [[ "$SSM_TARGET" =~ ^mi-[0-9a-f]{17}$ ]]
           test -n "$SSH_PRIVATE_KEY"
           test -n "$SSH_KNOWN_HOSTS"
           install -d -m 0700 "$HOME/.ssh"
           printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/endurocide-deploy"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          cat > "$HOME/.ssh/config" <<EOF
+          Host endurocide-private-origin
+            HostName ${SSM_TARGET}
+            User ${DEPLOY_USER}
+            IdentityFile ${HOME}/.ssh/endurocide-deploy
+            BatchMode yes
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ${HOME}/.ssh/known_hosts
+            HostKeyAlgorithms ssh-ed25519
+            ConnectTimeout 20
+            ProxyCommand sh -c "exec aws ssm start-session --region ${AWS_REGION} --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+          EOF
           chmod 0600 "$HOME/.ssh/endurocide-deploy" "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/config"
           ssh-keygen -y -f "$HOME/.ssh/endurocide-deploy" >/dev/null
-          ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+          ssh-keygen -F "$SSM_TARGET" -f "$HOME/.ssh/known_hosts" >/dev/null
+          aws sts get-caller-identity --query Account --output text >/dev/null
 
       - name: Transfer the bounded bundle and run the fixed deployment
         shell: bash
         env:
-          DEPLOY_HOST: ${{ secrets.ENDUROCIDE_DEPLOY_HOST }}
           DEPLOY_SCRIPT_SHA256: ${{ steps.bundle.outputs.deploy_script_sha256 }}
           ROLLBACK_SCRIPT_SHA256: ${{ steps.bundle.outputs.rollback_script_sha256 }}
         run: |
@@ -214,28 +256,27 @@ jobs:
           remote_dir="/home/${DEPLOY_USER}/incoming/${GITHUB_RUN_ID}"
           remote_created=0
           ssh_options=(
-            -i "$HOME/.ssh/endurocide-deploy"
-            -o BatchMode=yes
-            -o IdentitiesOnly=yes
-            -o StrictHostKeyChecking=yes
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
-            -o ConnectTimeout=15
+            -F "$HOME/.ssh/config"
           )
           cleanup() {
             rc=$?
             trap - EXIT HUP INT TERM
             if [ "$remote_created" = 1 ]; then
-              ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "rm -rf -- '${remote_dir}'" >/dev/null 2>&1 || true
+              if ! ssh "${ssh_options[@]}" endurocide-private-origin "rm -rf -- '${remote_dir}'" >/dev/null 2>&1; then
+                echo '::error title=Remote cleanup incomplete::The per-run remote bundle directory could not be proved absent; manual host review is required.'
+                printf '%s\n' 'Remote cleanup status: cleanup_incomplete; manual host review required.' >> "$GITHUB_STEP_SUMMARY"
+                rc=70
+              fi
             fi
             exit "$rc"
           }
           trap cleanup EXIT HUP INT TERM
-          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "test ! -e '${remote_dir}' && install -d -m 0700 '${remote_dir}'"
+          ssh "${ssh_options[@]}" endurocide-private-origin "test ! -e '${remote_dir}' && install -d -m 0700 '${remote_dir}'"
           remote_created=1
-          scp "${ssh_options[@]}" harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_dir}/"
-          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-deploy | cut -d' ' -f1)\" = '${DEPLOY_SCRIPT_SHA256}' && test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-rollback | cut -d' ' -f1)\" = '${ROLLBACK_SCRIPT_SHA256}'"
-          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 0400 '${remote_dir}/endurocide-image.tar.gz' '${remote_dir}/deployment-manifest.json' '${remote_dir}/github-oidc.jwt' && sudo -n /usr/local/libexec/harbor-hub-endurocide-deploy '${remote_dir}'"
-          ssh "${ssh_options[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "rm -rf -- '${remote_dir}'"
+          scp "${ssh_options[@]}" harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt "endurocide-private-origin:${remote_dir}/"
+          ssh "${ssh_options[@]}" endurocide-private-origin "test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-deploy | cut -d' ' -f1)\" = '${DEPLOY_SCRIPT_SHA256}' && test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-rollback | cut -d' ' -f1)\" = '${ROLLBACK_SCRIPT_SHA256}'"
+          ssh "${ssh_options[@]}" endurocide-private-origin "chmod 0400 '${remote_dir}/endurocide-image.tar.gz' '${remote_dir}/deployment-manifest.json' '${remote_dir}/github-oidc.jwt' && sudo -n /usr/local/libexec/harbor-hub-endurocide-deploy '${remote_dir}'"
+          ssh "${ssh_options[@]}" endurocide-private-origin "rm -rf -- '${remote_dir}'"
           remote_created=0
           trap - EXIT HUP INT TERM
 
@@ -243,4 +284,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          rm -f "$HOME/.ssh/endurocide-deploy" "$HOME/.ssh/known_hosts"
+          rm -f "$HOME/.ssh/endurocide-deploy" "$HOME/.ssh/known_hosts" "$HOME/.ssh/config"
