@@ -1,0 +1,304 @@
+name: Deploy Endurocide production from Harbor Hub
+run-name: Endurocide one-click · ${{ inputs.claim_uid }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Harbor Hub exact production confirmation"
+        required: true
+        type: string
+      claim_uid:
+        description: "Durable Harbor Hub exactly-once claim"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: harbor-hub-endurocide-production
+  cancel-in-progress: false
+
+env:
+  PINNED_COMMIT_SHA: 4eca0ac71699e45209fd8d51901d151c9a747893
+  NODE_BASE_IMAGE_DIGEST: sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+  DEPLOY_USER: harbor-deploy
+  AWS_REGION: ap-southeast-2
+  SSM_PLUGIN_VERSION: 1.2.835.0
+  SSM_PLUGIN_SHA256: 7c6dcad12518571cc7959a713e6a8ae1bdf6ed66fd9bee37dc189e39ca58ae03
+
+jobs:
+  deploy:
+    name: Build, transfer, and deploy the exact private origin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Validate exact Harbor Hub claim
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          CLAIM_UID: ${{ inputs.claim_uid }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$CONFIRMATION" = "DEPLOY ENDUROCIDE PRODUCTION"
+          [[ "$CLAIM_UID" =~ ^endurocide_[0-9a-f]{32}$ ]]
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+
+      - name: Check out the deployment workflow revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Validate the deployment workflow revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -f .github/harbor-hub/endurocide-one-click-deploy.sh
+          test -f .github/harbor-hub/endurocide-rollback.sh
+          test -f .github/harbor-hub/endurocide-runtime-validator.py
+          test -f .github/harbor-hub/fixtures/endurocide-runtime-live-equivalent.json
+          bash -n .github/harbor-hub/endurocide-one-click-deploy.sh
+          bash -n .github/harbor-hub/endurocide-rollback.sh
+          python3 -m py_compile .github/harbor-hub/endurocide-runtime-validator.py
+          .github/harbor-hub/endurocide-runtime-validator.py --fixture .github/harbor-hub/fixtures/endurocide-runtime-live-equivalent.json >/dev/null
+          pnpm install --frozen-lockfile
+          pnpm check
+          pnpm build
+
+      - name: Select and verify the exact application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout --detach "$PINNED_COMMIT_SHA"
+          git clean -ffdx
+          test "$(git rev-parse HEAD)" = "$PINNED_COMMIT_SHA"
+          test "$(git status --porcelain)" = ""
+
+      - name: Validate the exact application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm check
+          pnpm build
+
+      - name: Build and health-test the exact container image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$NODE_BASE_IMAGE_DIGEST" = "sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50"
+          cat > /tmp/Dockerfile.harbor-pinned <<'DOCKERFILE'
+          FROM node:22-alpine@sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50 AS builder
+          WORKDIR /app
+          COPY package.json pnpm-lock.yaml ./
+          COPY patches ./patches
+          RUN corepack enable && pnpm install --frozen-lockfile
+          COPY . .
+          RUN pnpm build && pnpm prune --prod
+
+          FROM node:22-alpine@sha256:b64da1de5a51067ab8e75f0bc8dbd0905d8894baa22261f439a4572f41291e50
+          ARG APPLICATION_COMMIT_SHA
+          ARG WORKFLOW_COMMIT_SHA
+          LABEL org.opencontainers.image.source="https://github.com/pcarikas-code/endurocide-prod" \
+                org.opencontainers.image.revision="${APPLICATION_COMMIT_SHA}" \
+                io.harbor-hub.workflow-sha="${WORKFLOW_COMMIT_SHA}"
+          WORKDIR /app
+          ENV NODE_ENV=production
+          ENV PORT=3000
+          COPY --from=builder --chown=node:node /app/package.json /app/pnpm-lock.yaml ./
+          COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+          COPY --from=builder --chown=node:node /app/dist ./dist
+          COPY --from=builder --chown=node:node /app/shared ./shared
+          USER node
+          EXPOSE 3000
+          HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+            CMD node -e "require('http').get('http://127.0.0.1:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"
+          CMD ["node", "dist/index.js"]
+          DOCKERFILE
+          docker build --pull --platform linux/amd64 \
+            --build-arg "APPLICATION_COMMIT_SHA=${PINNED_COMMIT_SHA}" \
+            --build-arg "WORKFLOW_COMMIT_SHA=${GITHUB_SHA}" \
+            --file /tmp/Dockerfile.harbor-pinned \
+            --tag "endurocide:${PINNED_COMMIT_SHA}" .
+          test "$(docker image inspect --format '{{.Config.User}}' "endurocide:${PINNED_COMMIT_SHA}")" = "node"
+          test "$(docker image inspect --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "endurocide:${PINNED_COMMIT_SHA}")" = "$PINNED_COMMIT_SHA"
+          test "$(docker image inspect --format '{{ index .Config.Labels "io.harbor-hub.workflow-sha" }}' "endurocide:${PINNED_COMMIT_SHA}")" = "$GITHUB_SHA"
+          docker network create harbor-endurocide-deploy-test
+          cleanup() {
+            docker rm --force endurocide-deploy-test >/dev/null 2>&1 || true
+            docker network rm harbor-endurocide-deploy-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          docker run --detach --name endurocide-deploy-test --network harbor-endurocide-deploy-test "endurocide:${PINNED_COMMIT_SHA}"
+          for attempt in $(seq 1 45); do
+            health="$(docker inspect --format '{{.State.Health.Status}}' endurocide-deploy-test)"
+            if [ "$health" = healthy ]; then
+              exit 0
+            fi
+            if [ "$health" = unhealthy ]; then
+              docker logs endurocide-deploy-test
+              exit 1
+            fi
+            sleep 2
+          done
+          docker logs endurocide-deploy-test
+          exit 1
+
+      - name: Create the bounded deployment bundle
+        id: bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -m 0700 harbor-deploy
+          docker save "endurocide:${PINNED_COMMIT_SHA}" | gzip -n -9 > harbor-deploy/endurocide-image.tar.gz
+          artifact_sha256="$(sha256sum harbor-deploy/endurocide-image.tar.gz | cut -d' ' -f1)"
+          artifact_size_bytes="$(stat -c %s harbor-deploy/endurocide-image.tar.gz)"
+          created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          jq -n \
+            --arg application "endurocide" \
+            --arg repository "pcarikas-code/endurocide-prod" \
+            --arg branch "main" \
+            --arg commitSha "$PINNED_COMMIT_SHA" \
+            --arg image "endurocide:${PINNED_COMMIT_SHA}" \
+            --arg artifactSha256 "$artifact_sha256" \
+            --arg createdAt "$created_at" \
+            --arg workflowCommitSha "$GITHUB_SHA" \
+            --arg workflowRunId "$GITHUB_RUN_ID" \
+            --arg workflowRunAttempt "$GITHUB_RUN_ATTEMPT" \
+            --arg authorizationClaim "${{ inputs.claim_uid }}" \
+            --arg nodeBaseImageDigest "$NODE_BASE_IMAGE_DIGEST" \
+            --argjson artifactSizeBytes "$artifact_size_bytes" \
+            '{schemaVersion:1,application:$application,repository:$repository,branch:$branch,commitSha:$commitSha,image:$image,platform:"linux/amd64",archiveFormat:"docker-image-tar+gzip",healthPath:"/api/health",artifactSha256:$artifactSha256,artifactSizeBytes:$artifactSizeBytes,baseImages:{node:$nodeBaseImageDigest},createdAt:$createdAt,workflowCommitSha:$workflowCommitSha,workflowRunId:$workflowRunId,workflowRunAttempt:$workflowRunAttempt,authorizationClaim:$authorizationClaim}' \
+            > harbor-deploy/deployment-manifest.json
+          test "$(stat -c %s harbor-deploy/deployment-manifest.json)" -le 8192
+          manifest_sha256="$(sha256sum harbor-deploy/deployment-manifest.json | cut -d' ' -f1)"
+          deploy_script_sha256="$(git show "${GITHUB_SHA}:.github/harbor-hub/endurocide-one-click-deploy.sh" | sha256sum | cut -d' ' -f1)"
+          rollback_script_sha256="$(git show "${GITHUB_SHA}:.github/harbor-hub/endurocide-rollback.sh" | sha256sum | cut -d' ' -f1)"
+          runtime_validator_sha256="$(git show "${GITHUB_SHA}:.github/harbor-hub/endurocide-runtime-validator.py" | sha256sum | cut -d' ' -f1)"
+          echo "deploy_script_sha256=${deploy_script_sha256}" >> "$GITHUB_OUTPUT"
+          echo "rollback_script_sha256=${rollback_script_sha256}" >> "$GITHUB_OUTPUT"
+          echo "runtime_validator_sha256=${runtime_validator_sha256}" >> "$GITHUB_OUTPUT"
+          oidc_audience="harbor-hub-endurocide-private-origin:${{ inputs.claim_uid }}:${artifact_sha256}:${manifest_sha256}"
+          oidc_response="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 15 --retry 0 \
+            --header "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${oidc_audience}")"
+          printf '%s' "$oidc_response" | jq -er '.value | select(type == "string" and length > 100)' > harbor-deploy/github-oidc.jwt
+          test "$(awk -F. 'NF == 3 {print NF}' harbor-deploy/github-oidc.jwt)" = "3"
+          test "$(stat -c %s harbor-deploy/github-oidc.jwt)" -le 16384
+          chmod 0400 harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt
+
+      - name: Configure exact AWS private-transport credentials
+        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_PRIVATE_ORIGIN_ROLE_ARN }}
+          role-session-name: endurocide-${{ github.run_id }}
+          role-duration-seconds: 900
+
+      - name: Install the checksum-pinned Session Manager plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          plugin_deb="$(mktemp /tmp/session-manager-plugin.XXXXXX.deb)"
+          cleanup() {
+            rm -f -- "$plugin_deb"
+          }
+          trap cleanup EXIT HUP INT TERM
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --max-time 60 --retry 0 \
+            "https://s3.amazonaws.com/session-manager-downloads/plugin/${SSM_PLUGIN_VERSION}/ubuntu_64bit/session-manager-plugin.deb" \
+            --output "$plugin_deb"
+          test "$(sha256sum "$plugin_deb" | cut -d' ' -f1)" = "$SSM_PLUGIN_SHA256"
+          sudo dpkg --install "$plugin_deb" >/dev/null
+          session-manager-plugin --version | grep -F "$SSM_PLUGIN_VERSION" >/dev/null
+
+      - name: Configure the dedicated SSH-over-Session-Manager connection
+        shell: bash
+        env:
+          SSM_TARGET: ${{ secrets.ENDUROCIDE_SSM_TARGET }}
+          SSH_PRIVATE_KEY: ${{ secrets.ENDUROCIDE_DEPLOY_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.ENDUROCIDE_DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test "$SSM_TARGET" != ""
+          [[ "$SSM_TARGET" =~ ^mi-[0-9a-f]{17}$ ]]
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/endurocide-deploy"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          cat > "$HOME/.ssh/config" <<EOF
+          Host endurocide-private-origin
+            HostName ${SSM_TARGET}
+            User ${DEPLOY_USER}
+            IdentityFile ${HOME}/.ssh/endurocide-deploy
+            BatchMode yes
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ${HOME}/.ssh/known_hosts
+            HostKeyAlgorithms ssh-ed25519
+            ConnectTimeout 20
+            ProxyCommand sh -c "exec aws ssm start-session --region ${AWS_REGION} --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p'"
+          EOF
+          chmod 0600 "$HOME/.ssh/endurocide-deploy" "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/config"
+          ssh-keygen -y -f "$HOME/.ssh/endurocide-deploy" >/dev/null
+          ssh-keygen -F "$SSM_TARGET" -f "$HOME/.ssh/known_hosts" >/dev/null
+          aws sts get-caller-identity --query Account --output text >/dev/null
+
+      - name: Transfer the bounded bundle and run the fixed deployment
+        shell: bash
+        env:
+          DEPLOY_SCRIPT_SHA256: ${{ steps.bundle.outputs.deploy_script_sha256 }}
+          ROLLBACK_SCRIPT_SHA256: ${{ steps.bundle.outputs.rollback_script_sha256 }}
+          RUNTIME_VALIDATOR_SHA256: ${{ steps.bundle.outputs.runtime_validator_sha256 }}
+        run: |
+          set -euo pipefail
+          remote_dir="/home/${DEPLOY_USER}/incoming/${GITHUB_RUN_ID}"
+          remote_created=0
+          ssh_options=(
+            -F "$HOME/.ssh/config"
+          )
+          cleanup() {
+            rc=$?
+            trap - EXIT HUP INT TERM
+            if [ "$remote_created" = 1 ]; then
+              if ! ssh "${ssh_options[@]}" endurocide-private-origin "rm -rf -- '${remote_dir}'" >/dev/null 2>&1; then
+                echo '::error title=Remote cleanup incomplete::The per-run remote bundle directory could not be proved absent; manual host review is required.'
+                printf '%s\n' 'Remote cleanup status: cleanup_incomplete; manual host review required.' >> "$GITHUB_STEP_SUMMARY"
+                rc=70
+              fi
+            fi
+            exit "$rc"
+          }
+          trap cleanup EXIT HUP INT TERM
+          ssh "${ssh_options[@]}" endurocide-private-origin "test ! -e '${remote_dir}' && install -d -m 0700 '${remote_dir}'"
+          remote_created=1
+          scp "${ssh_options[@]}" harbor-deploy/endurocide-image.tar.gz harbor-deploy/deployment-manifest.json harbor-deploy/github-oidc.jwt "endurocide-private-origin:${remote_dir}/"
+          ssh "${ssh_options[@]}" endurocide-private-origin "test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-one-click-deploy | cut -d' ' -f1)\" = '${DEPLOY_SCRIPT_SHA256}' && test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-rollback | cut -d' ' -f1)\" = '${ROLLBACK_SCRIPT_SHA256}' && test \"\$(sha256sum /usr/local/libexec/harbor-hub-endurocide-runtime-validator | cut -d' ' -f1)\" = '${RUNTIME_VALIDATOR_SHA256}'"
+          ssh "${ssh_options[@]}" endurocide-private-origin "chmod 0400 '${remote_dir}/endurocide-image.tar.gz' '${remote_dir}/deployment-manifest.json' '${remote_dir}/github-oidc.jwt' && sudo -n /usr/local/libexec/harbor-hub-endurocide-one-click-deploy '${remote_dir}'"
+          ssh "${ssh_options[@]}" endurocide-private-origin "rm -rf -- '${remote_dir}'"
+          remote_created=0
+          trap - EXIT HUP INT TERM
+
+      - name: Remove ephemeral runner SSH material
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$HOME/.ssh/endurocide-deploy" "$HOME/.ssh/known_hosts" "$HOME/.ssh/config"

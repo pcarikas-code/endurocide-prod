@@ -1,0 +1,162 @@
+{
+  "application": [
+    {
+      "Id": "sha256:application-runtime-fixture",
+      "Image": "sha256:application-image-fixture",
+      "Name": "/nca-pilot-nca-site-1",
+      "Config": {
+        "Image": "nca-website:9ba586d54d463004328b2235daae6de3ec9a2ef9",
+        "ExposedPorts": {
+          "8080/tcp": {}
+        },
+        "Labels": {
+          "com.docker.compose.config-hash": "fixture",
+          "com.docker.compose.container-number": "1",
+          "com.docker.compose.image": "fixture",
+          "com.docker.compose.oneoff": "False",
+          "com.docker.compose.project": "nca-pilot",
+          "com.docker.compose.project.config_files": "/opt/harbor-hub/tenants/nca/releases/9ba586d54d463004328b2235daae6de3ec9a2ef9/compose.yaml",
+          "com.docker.compose.project.working_dir": "/opt/harbor-hub/tenants/nca/releases/9ba586d54d463004328b2235daae6de3ec9a2ef9",
+          "com.docker.compose.service": "nca-site",
+          "com.docker.compose.version": "2.39.4"
+        }
+      },
+      "State": {
+        "Running": true,
+        "Status": "running",
+        "Health": {
+          "Status": "healthy"
+        }
+      },
+      "HostConfig": {
+        "RestartPolicy": {
+          "Name": "unless-stopped"
+        },
+        "ReadonlyRootfs": true,
+        "Privileged": false,
+        "Memory": 268435456,
+        "NanoCpus": 500000000,
+        "PidsLimit": 100,
+        "CapAdd": null,
+        "CapDrop": [
+          "CAP_ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges=true"
+        ],
+        "Tmpfs": {
+          "/tmp": "rw,size=32m,mode=1777"
+        },
+        "PortBindings": {}
+      },
+      "NetworkSettings": {
+        "Networks": {
+          "harbor-edge": {
+            "Aliases": [
+              "nca-pilot-nca-site-1",
+              "nca-site"
+            ]
+          }
+        }
+      },
+      "Mounts": []
+    }
+  ],
+  "edge": [
+    {
+      "Id": "sha256:edge-runtime-fixture",
+      "Image": "sha256:edge-image-fixture",
+      "Name": "/nca-edge",
+      "Config": {
+        "Image": "caddy@sha256:d8c17a862962def15cde69863a3a463f25a2664942eafd7bdbf050e9c3116b83",
+        "ExposedPorts": {
+          "2019/tcp": {},
+          "443/tcp": {},
+          "443/udp": {},
+          "80/tcp": {}
+        },
+        "Labels": {
+          "com.docker.compose.config-hash": "fixture",
+          "com.docker.compose.container-number": "1",
+          "com.docker.compose.image": "fixture",
+          "com.docker.compose.oneoff": "False",
+          "com.docker.compose.project": "nca-edge",
+          "com.docker.compose.project.config_files": "/opt/harbor-hub/edge/nca-pilot/compose.yaml",
+          "com.docker.compose.project.working_dir": "/opt/harbor-hub/edge/nca-pilot",
+          "com.docker.compose.service": "nca-edge",
+          "com.docker.compose.version": "2.39.4"
+        }
+      },
+      "State": {
+        "Running": true,
+        "Status": "running",
+        "Health": {
+          "Status": "healthy"
+        }
+      },
+      "HostConfig": {
+        "RestartPolicy": {
+          "Name": "unless-stopped"
+        },
+        "ReadonlyRootfs": true,
+        "Privileged": false,
+        "Memory": 201326592,
+        "NanoCpus": 350000000,
+        "PidsLimit": 100,
+        "CapAdd": [
+          "CAP_NET_BIND_SERVICE"
+        ],
+        "CapDrop": [
+          "ALL"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges"
+        ],
+        "Tmpfs": {
+          "/tmp": "size=33554432,mode=1777"
+        },
+        "PortBindings": {
+          "443/tcp": [
+            {
+              "HostIp": "",
+              "HostPort": "443"
+            }
+          ],
+          "80/tcp": [
+            {
+              "HostIp": "0.0.0.0",
+              "HostPort": "80"
+            }
+          ]
+        }
+      },
+      "NetworkSettings": {
+        "Networks": {
+          "harbor-edge": {
+            "Aliases": []
+          }
+        }
+      },
+      "Mounts": [
+        {
+          "Type": "bind",
+          "Source": "/opt/harbor-hub/edge/nca-pilot/Caddyfile",
+          "Destination": "/etc/caddy/Caddyfile",
+          "RW": false
+        },
+        {
+          "Type": "bind",
+          "Source": "/opt/harbor-hub/edge/nca-pilot/data",
+          "Destination": "/data",
+          "RW": true
+        },
+        {
+          "Type": "bind",
+          "Source": "/opt/harbor-hub/edge/nca-pilot/config",
+          "Destination": "/config",
+          "RW": true
+        }
+      ]
+    }
+  ]
+}
