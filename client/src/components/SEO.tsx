@@ -7,6 +7,7 @@ interface SEOProps {
   image?: string;
   url?: string;
   type?: string;
+  robots?: string;
   structuredData?: Record<string, any>;
 }
 
@@ -17,21 +18,22 @@ export default function SEO({
   image = "/og-image.jpg",
   url = window.location.href.replace(/^http:/, "https:"),
   type = "website",
+  robots = "index, follow",
   structuredData,
 }: SEOProps) {
   useEffect(() => {
-    // Update title
-    if (title === "Home") {
-      document.title = "endurocide® NZ | Antimicrobial Hospital Curtains";
-    } else {
-      document.title = `${title} | endurocide® NZ`;
-    }
+    const resolvedTitle =
+      title === "Home"
+        ? "endurocide® NZ | Antimicrobial Hospital Curtains"
+        : `${title} | endurocide® NZ`;
+
+    document.title = resolvedTitle;
 
     // Update meta tags
     const metaTags = {
       description: description,
       keywords: keywords,
-      "og:title": title,
+      "og:title": resolvedTitle,
       "og:description": description,
       "og:image": image,
       "og:url": url,
@@ -41,9 +43,9 @@ export default function SEO({
       "og:image:alt": description,
       "og:image:width": "1200",
       "og:image:height": "630",
-      "robots": "index, follow",
+      "robots": robots,
       "twitter:card": "summary_large_image",
-      "twitter:title": title,
+      "twitter:title": resolvedTitle,
       "twitter:description": description,
       "twitter:image": image,
     };
@@ -91,7 +93,7 @@ export default function SEO({
       script.textContent = JSON.stringify(structuredData);
     }
 
-  }, [title, description, keywords, image, url, type, structuredData]);
+  }, [title, description, keywords, image, url, type, robots, structuredData]);
 
   return null;
 }

@@ -2,10 +2,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, ArrowRight, FileText, Home } from "lucide-react";
 import { Link } from "wouter";
+import SEO from "@/components/SEO";
 
 export default function ThankYou() {
   return (
     <div className="min-h-screen bg-muted/30 py-20">
+      <SEO
+        title="Thank You"
+        description="Thank you for contacting endurocide® New Zealand. We will be in touch shortly."
+        robots="noindex, follow"
+      />
       <div className="container max-w-3xl">
         <Card className="border-none shadow-lg text-center py-12">
           <CardHeader className="space-y-6">
