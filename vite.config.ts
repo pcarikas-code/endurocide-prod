@@ -6,10 +6,15 @@ import path from "path";
 import { defineConfig } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
-
-export default defineConfig({
-  plugins,
+export default defineConfig(({ command }) => ({
+  plugins: [
+    react(),
+    tailwindcss(),
+    jsxLocPlugin(),
+    // The visual editor is useful in `vite` development mode, but its
+    // inline runtime is not needed by public production visitors.
+    ...(command === "serve" ? [vitePluginManusRuntime()] : []),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -41,4 +46,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));

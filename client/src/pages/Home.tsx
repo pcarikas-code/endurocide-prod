@@ -9,8 +9,8 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEO 
-        title="Hospital Curtains & Infection Control Solutions"
-        description="endurocide® provides patented antimicrobial disposable curtains that kill bacteria on contact. Proven infection control for hospitals and healthcare facilities in New Zealand."
+        title="Home"
+        description="Endurocide® NZ provides patented antimicrobial hospital curtains that kill pathogens on contact. Proven infection control for New Zealand healthcare."
         keywords="antimicrobial curtains, hospital curtains, infection control, disposable curtains, endurocide, healthcare hygiene"
         structuredData={{
           "@context": "https://schema.org",
@@ -154,7 +154,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Dual-Action Technology</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Traps and kills bacteria, fungi, and spores on the fabric surface, preventing re-transmission. <Link href="/clinical-studies" className="text-primary hover:underline">View clinical studies</Link>.
+                  Traps and kills bacteria, fungi, and spores on the fabric surface, preventing re-transmission. <Link href="/studies" className="text-primary hover:underline">View clinical studies</Link>.
                 </p>
               </CardContent>
             </Card>

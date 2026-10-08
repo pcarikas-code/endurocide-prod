@@ -3,10 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, ShieldCheck, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
+import SEO from "@/components/SEO";
 
 export default function Monkeypox() {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEO
+        title="Monkeypox Infection Control"
+        description="Learn how endurocide® antimicrobial curtains help healthcare facilities manage monkeypox and other emerging infectious diseases through environmental hygiene."
+        keywords="monkeypox infection control, antimicrobial curtains, healthcare hygiene, infection prevention"
+      />
       {/* Hero Section */}
       <section className="relative w-full min-h-[450px] flex items-end pb-8 md:pb-12">
         {/* Background Image */}
